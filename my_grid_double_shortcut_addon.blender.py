@@ -25,17 +25,17 @@ bl_info = {
 
 """
 
-Details:
+Plugin Info:
 
+GridDoubleScaleHotkeys v 1.1 (finished 24/04/2020)
 
-GridDoubleScaleHotkeys v 1.0 (finished 26/03/2020)
-
-Blender addon that adds shortcuts to blender to double and half the grid scale similar to Doom level editors
+Blender addon that adds shortcuts to blender to double and half the grid scale similar to Doom/Quake level editors
 
 shortcuts are assigned to NUMPAD_PLUS and NUMPAD_MINUS keys, usually they are redundant for zooming next to the mouse wheel
 
 
-it is suggested to set the grid subdivisions to 8 (for a less confusing look), which to do you must first set the scene properties units to "none" instead of the default (metric)
+To make usage more intuitive, set the scenes units to "None", set the grid subdivisions to a number like 8.
+
 
 
 based on templates:
@@ -43,6 +43,9 @@ based on templates:
 https://docs.blender.org/manual/en/latest/advanced/scripting/addon_tutorial.html
 
 coded by Richard Ellicott (https://github.com/RichardEllicott/)
+
+
+
 
 
 
@@ -179,8 +182,9 @@ class ObjectHalfGridScale(bpy.types.Operator):
 
 
 class ObjectOriginToBase(bpy.types.Operator):
-
-    """ObjectOriginToBase"""
+    """
+    for all selected objects move origin to base
+    """
     bl_idname = "object.object_origin_to_base"
 
     bl_label = "Object Origin To Base"
@@ -193,7 +197,13 @@ class ObjectOriginToBase(bpy.types.Operator):
         # bpy.context.scene.cursor_location = position
         # bpy.ops.object.origin_set(type='GEOMETRY_ORIGIN', center='MEDIAN')
 
-        origin_to_bottom(bpy.context.active_object)
+
+        # https://blender.stackexchange.com/questions/42105/set-origin-to-bottom-center-of-multiple-objects?noredirect=1&lq=1
+
+        for o in bpy.context.scene.objects:
+            if o.type == 'MESH':
+                origin_to_bottom(o)
+                #origin_to_bottom(o, matrix=o.matrix_world) # global
 
         return {'FINISHED'}
 
