@@ -1,9 +1,9 @@
 bl_info = {
-    "name": "Grid Scale Double/Half Shotcuts",
+    "name": "Grid Scale Double/Half Shortcuts (plus other scripts)",
     "author": "Richard Ellicott",
     "blender": (2, 80, 0),
     "category": "Object",
-    "version": (1, 0),
+    "version": (1, 101),
     "blender": (2, 80, 0),
     "category": "User Interface",
     "wiki_url": "https://github.com/RichardEllicott/GodotSnippets/",
@@ -45,10 +45,20 @@ https://docs.blender.org/manual/en/latest/advanced/scripting/addon_tutorial.html
 coded by Richard Ellicott (https://github.com/RichardEllicott/)
 
 
+Code is a bit messy because i want to preserve the boilerplate code, however this addon is tested and in my usage.
+You're welcome to tidy it if you wish :)
 
 
 
+This is my best Blender template to add tests to as it can be loaded as a script in blender itself
+Then you can just edit and reload.
 
+
+All added functions:
+    -double grid scale
+    -half grid scale 
+    -origin to base # move object origin
+    -origin to corner
 
 
 
@@ -57,6 +67,7 @@ coded by Richard Ellicott (https://github.com/RichardEllicott/)
 
 import bpy
 from mathutils import Matrix, Vector
+from collections import defaultdict
 
 
 # Preferences:
@@ -83,6 +94,27 @@ def origin_to_bottom(ob, matrix=Matrix()):
 
     mw.translation = mw @ o
 
+
+def origin_to_corner(): # on all selected
+
+    #https://blender.stackexchange.com/questions/141248/how-to-set-origin-points-of-multiple-objects-to-a-corner-of-their-bounding-boxes
+
+    context = bpy.context
+
+    meshobs = defaultdict(list)
+    for o in context.selected_objects:
+        if o.type == 'MESH':
+            meshobs[o.data].append(o)
+
+
+    for me, obs in meshobs.items():
+        o = obs[0]
+        bbox = [Vector(b) for b in o.bound_box]
+        lhc = bbox[0]
+        T = Matrix.Translation(-lhc)
+        me.transform(T)
+        for o in obs:
+            o.matrix_world.translation = o.matrix_world @ lhc
 
 def get_3D_area_object():
     """
@@ -197,17 +229,31 @@ class ObjectOriginToBase(bpy.types.Operator):
         # bpy.context.scene.cursor_location = position
         # bpy.ops.object.origin_set(type='GEOMETRY_ORIGIN', center='MEDIAN')
 
-
         # https://blender.stackexchange.com/questions/42105/set-origin-to-bottom-center-of-multiple-objects?noredirect=1&lq=1
 
         for o in bpy.context.scene.objects:
             if o.type == 'MESH':
                 origin_to_bottom(o)
-                #origin_to_bottom(o, matrix=o.matrix_world) # global
+                # origin_to_bottom(o, matrix=o.matrix_world) # global
 
         return {'FINISHED'}
 
-    pass
+
+class ObjectOriginToCorner(bpy.types.Operator):
+    """
+    for all selected objects move origin to base
+    """
+    bl_idname = "object.object_origin_to_corner"
+
+    bl_label = "Object Origin To Corner"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        origin_to_corner()
+        return {'FINISHED'}
+
+
+
 
 
 def menu_func(self, context):  # used atm
@@ -221,7 +267,8 @@ addon_keymaps = []
 register_list = [
     ObjectDoubleGridScale,
     ObjectHalfGridScale,
-    ObjectOriginToBase
+    ObjectOriginToBase,
+    ObjectOriginToCorner
 ]
 
 
@@ -230,7 +277,7 @@ def register():
     for ob in register_list:
         bpy.utils.register_class(ob)
 
-    # bpy.types.VIEW3D_MT_object.append(menu_func) # don't add to object menu!
+    # bpy.types.VIEW3D_MT_object.append(menu_func) # this code would add a menu
 
     # handle the keymap
     wm = bpy.context.window_manager
@@ -238,18 +285,15 @@ def register():
     # so we have to check this to avoid nasty errors in background case.
     kc = wm.keyconfigs.addon
     if kc:
-        object_mode_keys = wm.keyconfigs.addon.keymaps.new(name='Screen Editing', space_type='EMPTY') #name='Object Mode'
-        # kmi = km.keymap_items.new(ObjectDoubleGridScale.bl_idname, 'T', 'PRESS', ctrl=True, shift=True) # OLD PAT WITH CTRL SHIFT
-        kmi1 = object_mode_keys.keymap_items.new(ObjectDoubleGridScale.bl_idname, double_key_shortcut, 'PRESS')
+        object_mode_keys = wm.keyconfigs.addon.keymaps.new(name='Screen Editing', space_type='EMPTY')  # name='Object Mode'
 
-        kmi2 = object_mode_keys.keymap_items.new(ObjectHalfGridScale.bl_idname, half_key_shortcut, 'PRESS')  # DUPLICATED PATTERN
+        kmi1 = object_mode_keys.keymap_items.new(ObjectDoubleGridScale.bl_idname, double_key_shortcut, 'PRESS')  # double key
+        kmi2 = object_mode_keys.keymap_items.new(ObjectHalfGridScale.bl_idname, half_key_shortcut, 'PRESS')  # half key
 
         # kmi.properties.total = 4 # not needed ?!?!?! https://devtalk.blender.org/t/official-keymap-example-does-not-work/9032
 
         addon_keymaps.append((object_mode_keys, kmi1))  # saved so we can unregister
         addon_keymaps.append((object_mode_keys, kmi2))  # saved so we can unregister
-
-
 
 
 def unregister():
@@ -259,10 +303,6 @@ def unregister():
     for km, kmi in addon_keymaps:
         km.keymap_items.remove(kmi)
     addon_keymaps.clear()
-
-    # bpy.utils.unregister_class(ObjectDoubleGridScale) # REPLACED WITH LIST PATTERN
-    # bpy.utils.unregister_class(ObjectHalfGridScale) # DUPLICATED PATTERN
-    # bpy.utils.unregister_class(ObjectOriginToBase) # DUPLICATED PATTERN
 
     for ob in register_list:
         bpy.utils.unregister_class(ob)

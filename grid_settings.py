@@ -2,6 +2,7 @@
 
 editing the UI's grid scale
 
+
 """
 
 
@@ -55,4 +56,4 @@ def double_grid_scale():
     set_grid_scale(get_grid_scale() * 2.0)
 
 
-    
+
