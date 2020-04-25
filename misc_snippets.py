@@ -123,3 +123,38 @@ def origin_to_bottom(ob, matrix=Matrix()):
 
     mw.translation = mw @ o
 
+
+
+def origin_to_corner(): # on all selected
+    """
+
+    another setup i find useful, put all the origins to the bottom left hand corner
+
+    that the one where the axis arrows essentially originate from, (-1.0, -1.0, -1.0) on the bounding box
+
+    this is useful for things lining up to the grid, walls, floors etc
+
+    https://blender.stackexchange.com/questions/141248/how-to-set-origin-points-of-multiple-objects-to-a-corner-of-their-bounding-boxes
+
+
+    """
+
+
+    context = bpy.context
+
+    meshobs = defaultdict(list)
+    for o in context.selected_objects:
+        if o.type == 'MESH':
+            meshobs[o.data].append(o)
+
+
+    for me, obs in meshobs.items():
+        o = obs[0]
+        bbox = [Vector(b) for b in o.bound_box]
+        lhc = bbox[0]
+        T = Matrix.Translation(-lhc)
+        me.transform(T)
+        for o in obs:
+            o.matrix_world.translation = o.matrix_world @ lhc
+
+

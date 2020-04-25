@@ -3,7 +3,7 @@ bl_info = {
     "author": "Richard Ellicott",
     "blender": (2, 80, 0),
     "category": "Object",
-    "version": (1, 101),
+    "version": (2, 101),
     "blender": (2, 80, 0),
     "category": "User Interface",
     "wiki_url": "https://github.com/RichardEllicott/GodotSnippets/",
@@ -27,7 +27,7 @@ bl_info = {
 
 Plugin Info:
 
-GridDoubleScaleHotkeys v 1.101 PUBLIC VERSION
+GridDoubleScaleHotkeys v 2.101 EXPERIMENTAL VERSION
 
 Blender addon that adds shortcuts to blender to double and half the grid scale similar to Doom/Quake level editors
 
