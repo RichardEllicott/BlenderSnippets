@@ -13,9 +13,11 @@ def remove_object(ob):
     bpy.data.objects.remove(ob, do_unlink=True)
 
 
-def remove_scene_objects(key="GEN10_"):
+def remove_keyed_objects(key="GEN10_"):
     """
     remove all objects beginning with a key (used to mark generated objects)
+
+    this is useful if you write a script to generate an object, that deletes it's old copies if they exist
     """
     for ob in bpy.context.scene.objects:
         if key:
@@ -25,7 +27,7 @@ def remove_scene_objects(key="GEN10_"):
             bpy.data.objects.remove(ob, do_unlink=True)  # best option to delete, unlink first
 
 
-def select_created_objects(key=gen_key):
+def select_keyed_objects(key=gen_key):
     """
     select all objects beginning with a key
     """
@@ -90,7 +92,7 @@ def duplicate_object(ob, linked=0):
 
 def set_object_dimensions(ob, dimensions=(1, 1, 1)):
     """
-    works on an object similar to how the UI does it rescaling an object
+    works on an object similar to how the UI does it rescaling an object, but this function is not available in script
     """
     deselect_all()
     select_object(ob)
@@ -101,3 +103,23 @@ def set_object_dimensions(ob, dimensions=(1, 1, 1)):
 
 def apply_transform(location=True, scale=True, rotation=True):
     bpy.ops.object.transform_apply(location=location, scale=scale, rotation=rotation)  # apply transform
+
+
+
+def origin_to_bottom(ob, matrix=Matrix()):
+    """
+    similar to the origin to geometry functions but
+    moves an object's origin to the center bottom, this is good for walls, trees, characters etc
+
+    https://blender.stackexchange.com/questions/42105/set-origin-to-bottom-center-of-multiple-objects?noredirect=1&lq=1
+    """
+    me = ob.data
+    mw = ob.matrix_world
+    local_verts = [matrix @ Vector(v[:]) for v in ob.bound_box]
+    o = sum(local_verts, Vector()) / 8
+    o.z = min(v.z for v in local_verts)
+    o = matrix.inverted() @ o
+    me.transform(Matrix.Translation(-o))
+
+    mw.translation = mw @ o
+
