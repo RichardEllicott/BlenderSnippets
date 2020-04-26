@@ -43,8 +43,8 @@ import bmesh
 import math
 
 
-if bpy.app.version[0] < 2 or bpy.app.version[1] < 62:
-    raise Exception("This Triplanar UV mapping addons works only in Blender 2.62 and above")
+if bpy.app.version[0] < 2 or bpy.app.version[1] < 8:
+    raise Exception("This Triplanar UV mapping addons works only in Blender 2.8 and above")
     
 
 def main(context):
