@@ -80,8 +80,6 @@ from mathutils import Matrix, Vector
 from collections import defaultdict
 
 
-
-
 # Preferences:
 
 double_key_shortcut = "NUMPAD_PLUS"  # you can change the hot keys here
@@ -335,7 +333,3 @@ def unregister():
 
 if __name__ == "__main__":
     register()
-
-
-
-
