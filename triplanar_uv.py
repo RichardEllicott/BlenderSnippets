@@ -18,6 +18,10 @@
 #
 # ##### END GPL LICENSE BLOCK #####
 
+# Richard Ellicott: i found this here https://blenderartists.org/t/addon-triplanar-uv-mapping/663951
+# 
+# line 56 commented out, this seems to make the addon 2.8 compatible
+
 bl_info = {
     "name": "Triplanar UV mapping",
     "category": "UV",
@@ -27,15 +31,6 @@ bl_info = {
     "version": (0, 0, 2),
     "blender": (2, 8, 0)
 }
-
-"""
-
-Richard Ellicott: i found this here https://blenderartists.org/t/addon-triplanar-uv-mapping/663951
-
-line 56 commented out, this seems to make the addon 2.8 compatible
-
-
-"""
 
 
 import bpy
@@ -53,7 +48,7 @@ def main(context):
     bm = bmesh.from_edit_mesh(me)
 
     uv_layer = bm.loops.layers.uv.verify()
-    # bm.faces.layers.tex.verify()  # currently blender needs both layers.
+    # bm.faces.layers.tex.verify()  # currently blender needs both layers.(edited out for 2.8)
 
     # adjust UVs
     for f in bm.faces:
