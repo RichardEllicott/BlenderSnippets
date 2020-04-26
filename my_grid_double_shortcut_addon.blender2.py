@@ -62,6 +62,14 @@ All added functions:
 
 
 
+Dev issue notes:
+-originally i couldn't get the edit mode shortcuts working, i found "Screen Edit" to be the keyword given in the key preferences
+-still some boilerplate code save to make a working menu
+-a hack was needed to obtain the active UI window for the grid
+
+creating a panel menu thing: https://blender.stackexchange.com/questions/57306/how-to-create-a-custom-ui
+
+
 """
 
 
@@ -266,7 +274,7 @@ class ObjectTestScriptA(bpy.types.Operator):
         return {'FINISHED'}
 
 
-def menu_func(self, context):  # used atm
+def menu_func(self, context):  # not used atm
     self.layout.operator(ObjectDoubleGridScale.bl_idname)
 
 
@@ -323,3 +331,7 @@ def unregister():
 
 if __name__ == "__main__":
     register()
+
+
+
+
