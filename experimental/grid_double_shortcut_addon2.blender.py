@@ -72,12 +72,14 @@ creating a panel menu thing: https://blender.stackexchange.com/questions/57306/h
 
 """
 
-if bpy.app.version[0] < 2 or bpy.app.version[1] < 8:
-    raise Exception("This Triplanar UV mapping addons works only in Blender 2.8 and above")
 
 import bpy
 from mathutils import Matrix, Vector
 from collections import defaultdict
+
+
+if bpy.app.version[0] < 2 or bpy.app.version[1] < 8:
+    raise Exception("This Triplanar UV mapping addons works only in Blender 2.8 and above")
 
 
 # Preferences:
