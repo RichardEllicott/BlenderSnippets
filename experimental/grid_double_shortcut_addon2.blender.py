@@ -238,7 +238,7 @@ class ObjectOriginToBase(bpy.types.Operator):
 
         # https://blender.stackexchange.com/questions/42105/set-origin-to-bottom-center-of-multiple-objects?noredirect=1&lq=1
 
-        for o in bpy.context.scene.objects:
+        for o in bpy.context.selected_objects:
             if o.type == 'MESH':
                 origin_to_bottom(o)
                 # origin_to_bottom(o, matrix=o.matrix_world) # global
@@ -260,6 +260,18 @@ class ObjectOriginToCorner(bpy.types.Operator):
         return {'FINISHED'}
 
 
+def apply_to_selected_objects(fun, *args, **kwargs):
+    """
+    https://blender.stackexchange.com/questions/129955/looping-through-selected-objects-one-at-a-time
+    """
+    sel_objs = [obj for obj in bpy.context.selected_objects if obj.type == 'MESH']
+    bpy.ops.object.select_all(action='DESELECT')
+    for obj in sel_objs:
+        bpy.context.view_layer.objects.active = obj
+        yield fun(obj, *args, **kwargs)
+
+
+
 class ObjectTestScriptA(bpy.types.Operator):
     """
     for all selected objects move origin to base
@@ -272,8 +284,16 @@ class ObjectTestScriptA(bpy.types.Operator):
     def execute(self, context):
         print("running test script a...")
 
-        bpy.context.scene.unit_settings.system = 'METRIC'
-        bpy.context.scene.unit_settings.system = 'NONE'
+        # bpy.context.scene.unit_settings.system = 'METRIC'
+        # bpy.context.scene.unit_settings.system = 'NONE'
+        for o in bpy.context.selected_objects:
+            if o.type == 'MESH':
+                
+
+                print("XFXFXF", o, o.name)
+
+
+
 
         return {'FINISHED'}
 

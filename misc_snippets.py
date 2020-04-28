@@ -9,6 +9,36 @@ random unsorted Blender Python snippets
 import bpy
 
 
+selected_object = bpy.context.active_object
+
+# iterate scene objects
+for o in bpy.context.scene.objects:
+    if o.type == 'MESH':
+        print(o)
+
+# iterate selected objects
+for o in bpy.context.selected_objects:
+    # all objects (lights etc)
+    if o.type == 'MESH':
+        # just mesh
+        print(o)
+
+
+
+def apply_to_selected_objects(fun, *args, **kwargs):
+    """
+    https://blender.stackexchange.com/questions/129955/looping-through-selected-objects-one-at-a-time
+    """
+    sel_objs = [obj for obj in bpy.context.selected_objects if obj.type == 'MESH']
+    bpy.ops.object.select_all(action='DESELECT')
+    for obj in sel_objs:
+        bpy.context.view_layer.objects.active = obj
+        yield fun(obj, *args, **kwargs)
+
+
+
+
+
 def remove_object(ob):
     bpy.data.objects.remove(ob, do_unlink=True)
 

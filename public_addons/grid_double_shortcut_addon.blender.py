@@ -226,7 +226,7 @@ class ObjectOriginToBase(bpy.types.Operator):
 
         # https://blender.stackexchange.com/questions/42105/set-origin-to-bottom-center-of-multiple-objects?noredirect=1&lq=1
 
-        for o in bpy.context.scene.objects:
+        for o in bpy.context.selected_objects:
             if o.type == 'MESH':
                 origin_to_bottom(o)
                 # origin_to_bottom(o, matrix=o.matrix_world) # global
