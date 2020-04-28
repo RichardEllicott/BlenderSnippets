@@ -1,10 +1,9 @@
+Example of importing a custom library in Blender's python
 
 
+The normal way to do this is to make a library file like in normal python, however it will not load from the local folder the same way it would in python. Also loading the library while blender is still running leaves it loaded.
 
-Pattern shows to load a library you make in a Blender script
-
-
-but have it reload as you edit the library, and have the library script in a custom location (make sure to set exact folder)
+Instead of rebooting Blender, this template shows loading from a custom folder, and forcing a reload.
 
 
-This is useful until you're happy with it, because normally Blender will just import the library once, also normally only from addons folders.
+The libray_path must be the absolute path of the library
