@@ -74,12 +74,29 @@ creating a panel menu thing: https://blender.stackexchange.com/questions/57306/h
 
 
 import bpy
+import sys
 from mathutils import Matrix, Vector
 from collections import defaultdict
 
+print("\n" * 4)
+    
+print("loading my_grid_double_shortcut_addon.blender2...")
 
-if bpy.app.version[0] < 2 or bpy.app.version[1] < 8:
-    raise Exception("This Triplanar UV mapping addons works only in Blender 2.8 and above")
+
+
+def add_library_search_path(path):
+    if not path in sys.path:
+        sys.path.append(path)
+
+
+# load Blender ICE Library...
+add_library_search_path("/Users/rich/Documents/GitHub/myrepos/BlenderSnippets/experimental")
+
+import blender_ice_library as ice
+
+import importlib # import internals
+importlib.reload(ice) # force reload
+
 
 
 # Preferences:

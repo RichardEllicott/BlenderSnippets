@@ -188,3 +188,17 @@ def origin_to_corner(): # on all selected
             o.matrix_world.translation = o.matrix_world @ lhc
 
 
+
+def add_library_search_path(path):
+    """
+    add a library search path, also when dealing with libraries, you may want to force a refresh (blenders python is an open session):
+
+    import importlib # import internals
+    importlib.reload(ice) # force reload
+    """
+    if not path in sys.path:
+        sys.path.append(path)
+
+
+
+
