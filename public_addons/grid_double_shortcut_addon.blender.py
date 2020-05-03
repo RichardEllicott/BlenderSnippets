@@ -191,6 +191,7 @@ class ObjectDoubleGridScale(bpy.types.Operator):
     def execute(self, context):
         double_grid_scale()
         set_default_grid_settings()
+        self.report({"INFO"}, "grid_scale = {}".format(get_grid_scale()))
         return {'FINISHED'}
 
 
@@ -205,6 +206,7 @@ class ObjectHalfGridScale(bpy.types.Operator):
     def execute(self, context):
         set_default_grid_settings()
         half_grid_scale()
+        self.report({"INFO"}, "grid_scale = {}".format(get_grid_scale()))
         return {'FINISHED'}
 
 

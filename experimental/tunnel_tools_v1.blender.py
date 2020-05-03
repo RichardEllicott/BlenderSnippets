@@ -139,7 +139,6 @@ def origin_to_bottom(ob, matrix=Matrix()):
     mw.translation = mw @ o
 
 
-
 def origin_to_corner_rework(ob):
     """
 
@@ -154,19 +153,15 @@ def origin_to_corner_rework(ob):
     bbox = [Vector(b) for b in ob.bound_box]
 
     for i, v in enumerate(bbox):
-        print("BOUNDING BOX: {} {}".format(i,v))
+        print("BOUNDING BOX: {} {}".format(i, v))
 
     bbox = [Vector(b) for b in ob.bound_box]
     lhc = bbox[0]
     T = Matrix.Translation(-lhc)
 
-
     ob.data.transform(T)
 
     # ob.matrix_world.translation = ob.matrix_world @ lhc # moves to the corner
-
-
-    
 
 
 def origin_to_corner():  # on all selected
@@ -219,6 +214,15 @@ def get_3D_area_object():
                     break
 
 
+def set_automerge(setting):
+    # ob = get_3D_area_object()
+    bpy.context.tool_settings.use_mesh_automerge = setting
+
+
+def get_automerge():
+    return bpy.context.tool_settings.use_mesh_automerge
+
+
 def get_grid_scale():
     """
     returns grid scale as a float
@@ -260,6 +264,24 @@ def set_default_grid_settings():
     set_grid_subdivisons(8)
 
 
+class ObjectAutoMergeToggle(bpy.types.Operator):
+    """
+    Adding a shortcut for auto merge vertices
+    """
+    # bl_idname = "object.double_grid_scale"
+    bl_idname = "edit.auto_merge_toggle"
+
+    bl_label = "Auto Merge Vertices"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    # total: bpy.props.IntProperty(name="Steps", default=2, min=1, max=100) # was for the shortcut context
+
+    def execute(self, context):
+        set_automerge(not get_automerge())  # toggle
+
+        return {'FINISHED'}
+
+
 class ObjectDoubleGridScale(bpy.types.Operator):
     """Object Double Grid Scale"""
     # bl_idname = "object.double_grid_scale"
@@ -273,6 +295,9 @@ class ObjectDoubleGridScale(bpy.types.Operator):
     def execute(self, context):
         double_grid_scale()
         set_default_grid_settings()
+        #feedback:
+        #https://docs.blender.org/api/blender_python_api_2_75_release/bpy.types.Operator.html?highlight=report#bpy.types.Operator.report
+        self.report({"INFO"}, "grid_scale = {}".format(get_grid_scale()))
         return {'FINISHED'}
 
 
@@ -287,6 +312,7 @@ class ObjectHalfGridScale(bpy.types.Operator):
     def execute(self, context):
         set_default_grid_settings()
         half_grid_scale()
+        self.report({"INFO"}, "grid_scale = {}".format(get_grid_scale()))
         return {'FINISHED'}
 
 
@@ -296,7 +322,7 @@ class ObjectOriginToBase(bpy.types.Operator):
     """
     bl_idname = "object.object_origin_to_base"
 
-    bl_label = "Origin To Base"
+    bl_label = "Origin to Base"
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
@@ -308,10 +334,10 @@ class ObjectOriginToBase(bpy.types.Operator):
 
         # https://blender.stackexchange.com/questions/42105/set-origin-to-bottom-center-of-multiple-objects?noredirect=1&lq=1
 
-        for o in bpy.context.selected_objects:
-            if o.type == 'MESH':
-                origin_to_bottom(o)
-                # origin_to_bottom(o, matrix=o.matrix_world) # global
+        for ob in bpy.context.selected_objects:
+            if ob.type == 'MESH':
+                origin_to_bottom(ob)
+                # origin_to_bottom(ob, matrix=ob.matrix_world) # global
 
         return {'FINISHED'}
 
@@ -322,11 +348,49 @@ class ObjectOriginToCorner(bpy.types.Operator):
     """
     bl_idname = "object.object_origin_to_corner"
 
-    bl_label = "Origin To Corner"
+    bl_label = "Origin to Corner (left hand corner)"
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
         origin_to_corner()
+        return {'FINISHED'}
+
+
+def origin_to_center():
+
+    # SAVES THE SELECTED OBJECTS
+    sel_objs = bpy.context.selected_objects  # get selected objects
+    active_ob = bpy.context.view_layer.objects.active
+
+    bpy.ops.object.select_all(action='DESELECT')  # deselect all
+
+    for ob in sel_objs:
+        if ob.type == 'MESH':
+            ob.select_set(state=True)  # select the object
+            bpy.context.view_layer.objects.active = ob
+            bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY', center='BOUNDS')  # only works on selected object
+
+    # RESTORES THE SELECTED OBJECTS
+    bpy.ops.object.select_all(action='DESELECT')  # deselect all
+    for ob in sel_objs:
+        ob.select_set(state=True)  # select
+    bpy.context.view_layer.objects.active = active_ob
+
+
+class ObjectOriginToCenter(bpy.types.Operator):
+    """
+    for all selected objects move origin to base
+    """
+    bl_idname = "object.object_origin_to_center"
+
+    bl_label = "Origin to Center"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        # for ob in bpy.context.selected_objects:
+        #     if ob.type == 'MESH':
+        origin_to_center()
+
         return {'FINISHED'}
 
 
@@ -406,9 +470,7 @@ class ObjectCopyUVProjectModifier(bpy.types.Operator):
             if ob.type == 'MESH':
                 add_custom_uv_to_ob(ob)
 
-
         return {'FINISHED'}
-
 
 
 def add_custom_uv_to_ob(ob):
@@ -418,29 +480,31 @@ def add_custom_uv_to_ob(ob):
     doesn't change object selection
 
     """
-    GEN_NAME = "UVProjectGen" #name is required to retrieve modifier
+    GEN_NAME = "UVProjectGen"  # name is required to retrieve modifier
+
+    PROJECTOR_NAMES = [  # names of projectors to add
+        "_1_UVBack",
+        "_2_UVFront",
+        "_3_UVBottom",
+        "_4_UVTop",
+        "_5_UVLeft",
+        "_6_UVRight",
+    ]
+
+    SCALE = 2.0
 
     if not GEN_NAME in ob.modifiers:
 
-        ob.modifiers.new(GEN_NAME, type='UV_PROJECT') # THIS STYLE DOESN'T CHANGE THE ACTIVE SELECTED OBJECT
-        mod = ob.modifiers[GEN_NAME] # POTENTIAL BUG: THIS MIGHT NOT HAVE THE RIGHT NAME
-        mod.projector_count = 6
-        mod.projectors[0].object = bpy.data.objects["_1_UVBack"]
-        mod.projectors[1].object = bpy.data.objects["_2_UVFront"]
-        mod.projectors[2].object = bpy.data.objects["_3_UVBottom"]
-        mod.projectors[3].object = bpy.data.objects["_4_UVTop"]
-        mod.projectors[4].object = bpy.data.objects["_5_UVLeft"]
-        mod.projectors[5].object = bpy.data.objects["_6_UVRight"]
-        mod.scale_x = 2.0
-        mod.scale_y = 2.0
+        ob.modifiers.new(GEN_NAME, type='UV_PROJECT')  # THIS STYLE DOESN'T CHANGE THE ACTIVE SELECTED OBJECT
+        mod = ob.modifiers[GEN_NAME]  # POTENTIAL BUG: THIS MIGHT NOT HAVE THE RIGHT NAME
+
+        mod.projector_count = len(PROJECTOR_NAMES)  # set camera count
+        for (i, v) in enumerate(PROJECTOR_NAMES):
+            mod.projectors[i].object = bpy.data.objects[v]  # set all the cameras
+        mod.scale_x = SCALE
+        mod.scale_y = SCALE
         mod.show_expanded = False
 
-
-
-
-
-
-                
 
 class ObjectTestScriptA(bpy.types.Operator):
     """
@@ -472,14 +536,19 @@ addon_keymaps = []
 register_list = [
     ObjectDoubleGridScale,
     ObjectHalfGridScale,
+
     ObjectOriginToBase,
     ObjectOriginToCorner,
+    ObjectOriginToCenter,
+
     ObjectTagCol,
     ObjectTagColIfRB,
 
     ObjectCopyUVProjectModifier,
 
-    ObjectTestScriptA
+    ObjectTestScriptA,
+
+    ObjectAutoMergeToggle
 ]
 
 

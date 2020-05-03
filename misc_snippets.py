@@ -74,10 +74,10 @@ def select_keyed_objects(key=gen_key):
             select_object(ob)
 
 
-def select_all(): bpy.ops.object.select_all(action='SELECT')
+def select_all(): bpy.ops.object.select_all(action='SELECT') # select all
 
 
-def deselect_all(): bpy.ops.object.select_all(action='DESELECT')
+def deselect_all(): bpy.ops.object.select_all(action='DESELECT') # deselect all
 
 
 def select_object(ob):  # https://devtalk.blender.org/t/selecting-an-object-in-2-8/4177
