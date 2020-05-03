@@ -1,9 +1,9 @@
 bl_info = {
-    "name": "Grid Scale Double/Half Shortcuts (plus other scripts)",
+    "name": "Tunnel Tools (grid double half shortcuts and other personal tools primarily for level development",
     "author": "Richard Ellicott",
     "blender": (2, 80, 0),
     "category": "Object",
-    "version": (2, 101),
+    "version": (1, 0),
     "blender": (2, 80, 0),
     "category": "User Interface",
     "wiki_url": "https://github.com/RichardEllicott/GodotSnippets/",
@@ -30,7 +30,8 @@ https://github.com/RichardEllicott/GodotSnippets/
 
 Plugin Info:
 
-GridDoubleScaleHotkeys v 2.101 EXPERIMENTAL VERSION (WARNING THIS IS A VERY WHISTICAL COLLECTION OF SHORTCUTS)
+Tunnel Tools v 1.0 EXPERIMENTAL VERSION (WARNING THIS IS A VERY WHISTICAL COLLECTION OF SHORTCUTS THAT I KEEP ALL IN ONE PLACE)
+
 
 Blender addon that adds shortcuts to blender to double and half the grid scale similar to Doom/Quake level editors
 
@@ -70,6 +71,10 @@ All added functions:
         -export a DAE on only selected objects (apply modifiers to)
         -now finished, press undo to remove the annoying -col tag
 
+    -Another version of the above will add the -col or -rigidbody if the object has a Blender rigidbody
+    -Another tool to set up modifiers
+
+
 
 
 Dev issue notes:
@@ -108,6 +113,8 @@ importlib.reload(ice)  # force reload
 
 
 # Preferences:
+# TODO https://docs.blender.org/api/blender_python_api_2_68_release/bpy.types.AddonPreferences.html
+# Preferences menu?
 
 double_key_shortcut = "NUMPAD_PLUS"  # you can change the hot keys here
 half_key_shortcut = "NUMPAD_MINUS"
@@ -132,9 +139,47 @@ def origin_to_bottom(ob, matrix=Matrix()):
     mw.translation = mw @ o
 
 
+
+def origin_to_corner_rework(ob):
+    """
+
+    trying to rework this as i prefer to use in script better
+
+    the optimizations of the original make it only usable on the selected objects
+
+    NOT WORKING
+
+    """
+
+    bbox = [Vector(b) for b in ob.bound_box]
+
+    for i, v in enumerate(bbox):
+        print("BOUNDING BOX: {} {}".format(i,v))
+
+    bbox = [Vector(b) for b in ob.bound_box]
+    lhc = bbox[0]
+    T = Matrix.Translation(-lhc)
+
+
+    ob.data.transform(T)
+
+    # ob.matrix_world.translation = ob.matrix_world @ lhc # moves to the corner
+
+
+    
+
+
 def origin_to_corner():  # on all selected
+    """
+
+    of all selected mesh
 
     # https://blender.stackexchange.com/questions/141248/how-to-set-origin-points-of-multiple-objects-to-a-corner-of-their-bounding-boxes
+
+    note this code is only for ALL SELECTED, this is because it doesn't apply the operation to mesh more than once if they're linked
+    (maybe a little ott, so recoding to simple version)
+
+    """
 
     context = bpy.context
 
@@ -251,7 +296,7 @@ class ObjectOriginToBase(bpy.types.Operator):
     """
     bl_idname = "object.object_origin_to_base"
 
-    bl_label = "Object Origin To Base"
+    bl_label = "Origin To Base"
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
@@ -277,7 +322,7 @@ class ObjectOriginToCorner(bpy.types.Operator):
     """
     bl_idname = "object.object_origin_to_corner"
 
-    bl_label = "Object Origin To Corner"
+    bl_label = "Origin To Corner"
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
