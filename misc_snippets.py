@@ -24,6 +24,14 @@ for o in bpy.context.selected_objects:
         print(o)
 
 
+# iterate modifiers
+for modifier in selected_object.modifiers:
+    print("{} {}".format(mod,type(mod)))
+
+# print modifiers
+print([modifier.identifier for modifier in bpy.types.Modifier.bl_rna.properties['type'].enum_items])
+
+
 
 def apply_to_selected_objects(fun, *args, **kwargs):
     """

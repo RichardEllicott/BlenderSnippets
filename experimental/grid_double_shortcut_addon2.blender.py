@@ -24,10 +24,13 @@ bl_info = {
 
 
 """
+https://github.com/RichardEllicott/GodotSnippets/
+
+
 
 Plugin Info:
 
-GridDoubleScaleHotkeys v 2.101 EXPERIMENTAL VERSION
+GridDoubleScaleHotkeys v 2.101 EXPERIMENTAL VERSION (WARNING THIS IS A VERY WHISTICAL COLLECTION OF SHORTCUTS)
 
 Blender addon that adds shortcuts to blender to double and half the grid scale similar to Doom/Quake level editors
 
@@ -56,9 +59,16 @@ Then you can just edit and reload.
 
 All added functions:
     -double grid scale
-    -half grid scale 
+    -half grid scale
     -origin to base # move object origin
     -origin to corner
+
+    -Append Object Name -col # for usage with godot import, will add the tag for a static body in Godot
+        -an easy Blender recipe for Godot export (this is why i use this shortcut)
+        -make your models, select them all
+        -run this script to append
+        -export a DAE on only selected objects (apply modifiers to)
+        -now finished, press undo to remove the annoying -col tag
 
 
 
@@ -79,9 +89,8 @@ from mathutils import Matrix, Vector
 from collections import defaultdict
 
 print("\n" * 4)
-    
-print("loading my_grid_double_shortcut_addon.blender2...")
 
+print("loading my_grid_double_shortcut_addon.blender2...")
 
 
 def add_library_search_path(path):
@@ -94,9 +103,8 @@ add_library_search_path("/Users/rich/Documents/GitHub/myrepos/BlenderSnippets/ex
 
 import blender_ice_library as ice
 
-import importlib # import internals
-importlib.reload(ice) # force reload
-
+import importlib  # import internals
+importlib.reload(ice)  # force reload
 
 
 # Preferences:
@@ -277,21 +285,125 @@ class ObjectOriginToCorner(bpy.types.Operator):
         return {'FINISHED'}
 
 
-def apply_to_selected_objects(fun, *args, **kwargs):
+class ObjectTagCol(bpy.types.Operator):
     """
-    https://blender.stackexchange.com/questions/129955/looping-through-selected-objects-one-at-a-time
-    """
-    sel_objs = [obj for obj in bpy.context.selected_objects if obj.type == 'MESH']
-    bpy.ops.object.select_all(action='DESELECT')
-    for obj in sel_objs:
-        bpy.context.view_layer.objects.active = obj
-        yield fun(obj, *args, **kwargs)
+    append object name with tag -col
 
 
+    designed to be used with Godot which uses various tags to load level data from Blender
+
+    https://docs.godotengine.org/en/stable/getting_started/workflow/assets/importing_scenes.html?highlight=importing%20assets#godot-scene-importer
+
+
+    """
+    bl_idname = "object.object_tag_col"
+
+    bl_label = "Append Object Name -col"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+
+        for o in bpy.context.selected_objects:
+            if o.type == 'MESH':
+                if not o.name.endswith("-col"):
+                    o.name = o.name + "-col"  # MAIN BIT
+
+        return {'FINISHED'}
+
+
+class ObjectTagColIfRB(bpy.types.Operator):
+    """
+    Objects with Passive rigidbody become Static colliders
+
+    Objects with Active rigidbody become rigidbody colliders
+
+
+    """
+    bl_idname = "object.object_tag_col_ifrb"
+
+    bl_label = "Append Object Name -col (IF RB IS ACTIVE EXPERIMENTAL)"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        # origin_to_corner()
+
+        for o in bpy.context.selected_objects:
+            if o.type == 'MESH':
+
+                if o.rigid_body.enabled:
+                    if o.rigid_body.type == "PASSIVE":  # Objects with Passive rigidbody become Static colliders
+                        if not o.name.endswith("-col"):
+                            o.name = o.name + "-col"
+
+                    elif o.rigid_body.type == "ACTIVE":  # Objects with Active rigidbody become rigidbody colliders
+                        o.name = o.name + "-rigid"
+
+        return {'FINISHED'}
+
+
+class ObjectCopyUVProjectModifier(bpy.types.Operator):
+    """
+    testing adding modifiers etc
+
+    ['DATA_TRANSFER', 'MESH_CACHE', 'MESH_SEQUENCE_CACHE', 'NORMAL_EDIT', 'WEIGHTED_NORMAL', 'UV_PROJECT', 'UV_WARP', 'VERTEX_WEIGHT_EDIT', 'VERTEX_WEIGHT_MIX', 'VERTEX_WEIGHT_PROXIMITY', 'ARRAY', 'BEVEL', 'BOOLEAN', 'BUILD', 'DECIMATE', 'EDGE_SPLIT', 'MASK', 'MIRROR', 'MULTIRES', 'REMESH', 'SCREW', 'SKIN', 'SOLIDIFY', 'SUBSURF', 'TRIANGULATE', 'WIREFRAME', 'WELD', 'ARMATURE', 'CAST', 'CURVE', 'DISPLACE', 'HOOK', 'LAPLACIANDEFORM', 'LATTICE', 'MESH_DEFORM', 'SHRINKWRAP', 'SIMPLE_DEFORM', 'SMOOTH', 'CORRECTIVE_SMOOTH', 'LAPLACIANSMOOTH', 'SURFACE_DEFORM', 'WARP', 'WAVE', 'CLOTH', 'COLLISION', 'DYNAMIC_PAINT', 'EXPLODE', 'OCEAN', 'PARTICLE_INSTANCE', 'PARTICLE_SYSTEM', 'FLUID', 'SOFT_BODY', 'SURFACE']
+
+
+    """
+    bl_idname = "object.copy_uv_project_modifier"
+
+    bl_label = "Copy UV Project modifier"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        print("running test script a...")
+
+        for ob in bpy.context.selected_objects:
+            if ob.type == 'MESH':
+                add_custom_uv_to_ob(ob)
+
+
+        return {'FINISHED'}
+
+
+
+def add_custom_uv_to_ob(ob):
+    """
+    sets up my custom UV on object
+
+    doesn't change object selection
+
+    """
+    GEN_NAME = "UVProjectGen" #name is required to retrieve modifier
+
+    if not GEN_NAME in ob.modifiers:
+
+        ob.modifiers.new(GEN_NAME, type='UV_PROJECT') # THIS STYLE DOESN'T CHANGE THE ACTIVE SELECTED OBJECT
+        mod = ob.modifiers[GEN_NAME] # POTENTIAL BUG: THIS MIGHT NOT HAVE THE RIGHT NAME
+        mod.projector_count = 6
+        mod.projectors[0].object = bpy.data.objects["_1_UVBack"]
+        mod.projectors[1].object = bpy.data.objects["_2_UVFront"]
+        mod.projectors[2].object = bpy.data.objects["_3_UVBottom"]
+        mod.projectors[3].object = bpy.data.objects["_4_UVTop"]
+        mod.projectors[4].object = bpy.data.objects["_5_UVLeft"]
+        mod.projectors[5].object = bpy.data.objects["_6_UVRight"]
+        mod.scale_x = 2.0
+        mod.scale_y = 2.0
+        mod.show_expanded = False
+
+
+
+
+
+
+                
 
 class ObjectTestScriptA(bpy.types.Operator):
     """
-    for all selected objects move origin to base
+    testing adding modifiers etc
+
+    ['DATA_TRANSFER', 'MESH_CACHE', 'MESH_SEQUENCE_CACHE', 'NORMAL_EDIT', 'WEIGHTED_NORMAL', 'UV_PROJECT', 'UV_WARP', 'VERTEX_WEIGHT_EDIT', 'VERTEX_WEIGHT_MIX', 'VERTEX_WEIGHT_PROXIMITY', 'ARRAY', 'BEVEL', 'BOOLEAN', 'BUILD', 'DECIMATE', 'EDGE_SPLIT', 'MASK', 'MIRROR', 'MULTIRES', 'REMESH', 'SCREW', 'SKIN', 'SOLIDIFY', 'SUBSURF', 'TRIANGULATE', 'WIREFRAME', 'WELD', 'ARMATURE', 'CAST', 'CURVE', 'DISPLACE', 'HOOK', 'LAPLACIANDEFORM', 'LATTICE', 'MESH_DEFORM', 'SHRINKWRAP', 'SIMPLE_DEFORM', 'SMOOTH', 'CORRECTIVE_SMOOTH', 'LAPLACIANSMOOTH', 'SURFACE_DEFORM', 'WARP', 'WAVE', 'CLOTH', 'COLLISION', 'DYNAMIC_PAINT', 'EXPLODE', 'OCEAN', 'PARTICLE_INSTANCE', 'PARTICLE_SYSTEM', 'FLUID', 'SOFT_BODY', 'SURFACE']
+
+
     """
     bl_idname = "object.test_script_a"
 
@@ -300,17 +412,6 @@ class ObjectTestScriptA(bpy.types.Operator):
 
     def execute(self, context):
         print("running test script a...")
-
-        # bpy.context.scene.unit_settings.system = 'METRIC'
-        # bpy.context.scene.unit_settings.system = 'NONE'
-        for o in bpy.context.selected_objects:
-            if o.type == 'MESH':
-                
-
-                print("XFXFXF", o, o.name)
-
-
-
 
         return {'FINISHED'}
 
@@ -328,6 +429,11 @@ register_list = [
     ObjectHalfGridScale,
     ObjectOriginToBase,
     ObjectOriginToCorner,
+    ObjectTagCol,
+    ObjectTagColIfRB,
+
+    ObjectCopyUVProjectModifier,
+
     ObjectTestScriptA
 ]
 
