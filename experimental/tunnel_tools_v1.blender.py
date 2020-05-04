@@ -1,3 +1,9 @@
+# Tunnel Tools v1.0 (Alpha) Addon by Richard Ellicott
+# https://github.com/RichardEllicott/GodotSnippets/
+# includes many shortcuts, installs as addon or run in script editor
+# includes modified boilerplate code that makes it easier to add hot-keys automatically
+# see list "register_list" for a list of all the bpy.types.Operator objects added
+# objects have an added parameter that contains a dictionary with their keyboard shortcuts allowing for easy keymap setup
 bl_info = {
     "name": "Tunnel Tools (grid double half shortcuts and other personal tools primarily for level development",
     "author": "Richard Ellicott",
@@ -9,22 +15,9 @@ bl_info = {
     "wiki_url": "https://github.com/RichardEllicott/GodotSnippets/",
     "support": "COMMUNITY"
 }
-# "name": "Grid Scale Double/Half Shotcuts",
-# "description": "binds + and - to double and half the grid",
-# "author": "Richard Ellicott",
-# "version": (1, 0),
-# "blender": (2, 80, 0),
-# # "location": "View3D > Add > Mesh",
-# # "warning": "", # used for warning icon and text in addons panel
-# # "wiki_url": "http://wiki.blender.org/index.php/Extensions:2.6/Py/"
-# #             "Scripts/My_Script",
-# # "tracker_url": "https://developer.blender.org/maniphest/task/edit/form/2/",
-# #
-# "category": "Object",
 
 
 """
-https://github.com/RichardEllicott/GodotSnippets/
 
 
 
@@ -616,7 +609,7 @@ register_list = [
 def register():
 
 
-    
+
 
     for ob in register_list:
         bpy.utils.register_class(ob)
