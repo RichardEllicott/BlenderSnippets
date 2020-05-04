@@ -4,6 +4,7 @@
 # includes modified boilerplate code that makes it easier to add hot-keys automatically
 # see list "register_list" for a list of all the bpy.types.Operator objects added
 # objects have an added parameter that contains a dictionary with their keyboard shortcuts allowing for easy keymap setup
+# while this code is a tad messy at the moment, it works! (i am using it for my Blender work flow)
 bl_info = {
     "name": "Tunnel Tools (grid double half shortcuts and other personal tools primarily for level development",
     "author": "Richard Ellicott",
