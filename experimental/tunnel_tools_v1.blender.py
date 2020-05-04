@@ -90,7 +90,9 @@ creating a panel menu thing: https://blender.stackexchange.com/questions/57306/h
 
 import bpy
 import sys
-from mathutils import Matrix, Vector
+import inspect  # scans for classes
+from mathutils import Matrix, Vector, Euler
+import math
 from collections import defaultdict
 
 print("\n" * 4)
@@ -116,8 +118,6 @@ importlib.reload(ice)  # force reload
 # TODO https://docs.blender.org/api/blender_python_api_2_68_release/bpy.types.AddonPreferences.html
 # Preferences menu?
 
-double_key_shortcut = "NUMPAD_PLUS"  # you can change the hot keys here
-half_key_shortcut = "NUMPAD_MINUS"
 
 # Begin Plugin
 
@@ -137,31 +137,6 @@ def origin_to_bottom(ob, matrix=Matrix()):
     me.transform(Matrix.Translation(-o))
 
     mw.translation = mw @ o
-
-
-def origin_to_corner_rework(ob):
-    """
-
-    trying to rework this as i prefer to use in script better
-
-    the optimizations of the original make it only usable on the selected objects
-
-    NOT WORKING
-
-    """
-
-    bbox = [Vector(b) for b in ob.bound_box]
-
-    for i, v in enumerate(bbox):
-        print("BOUNDING BOX: {} {}".format(i, v))
-
-    bbox = [Vector(b) for b in ob.bound_box]
-    lhc = bbox[0]
-    T = Matrix.Translation(-lhc)
-
-    ob.data.transform(T)
-
-    # ob.matrix_world.translation = ob.matrix_world @ lhc # moves to the corner
 
 
 def origin_to_corner():  # on all selected
@@ -252,6 +227,15 @@ def half_grid_scale():
 def double_grid_scale():
     set_grid_scale(get_grid_scale() * 2.0)
 
+def select_all(): bpy.ops.object.select_all(action='SELECT')  # select all
+
+
+def deselect_all(): bpy.ops.object.select_all(action='DESELECT')  # deselect all
+
+
+def select_object(ob):  # https://devtalk.blender.org/t/selecting-an-object-in-2-8/4177
+    ob.select_set(state=True)
+    bpy.context.view_layer.objects.active = ob
 
 # Blender Operator Objects:
 
@@ -259,6 +243,8 @@ def double_grid_scale():
 def set_default_grid_settings():
     """
     automatically sets the scene units to none and the grid subdivisions to 8
+
+    it's a bit of a hack to make my life easier, may be annoying
     """
     bpy.context.scene.unit_settings.system = 'NONE'
     set_grid_subdivisons(8)
@@ -290,24 +276,40 @@ class ObjectDoubleGridScale(bpy.types.Operator):
     bl_label = "Double Grid Scale"
     bl_options = {'REGISTER', 'UNDO'}
 
+    screen_editing_hotkey = {
+        # NUMPAD_PLUS RIGHT_BRACKET https://docs.blender.org/api/2.82/bpy.types.KeyMapItem.html#bpy.types.KeyMapItem.type
+        "type": "NUMPAD_PLUS",
+        "value": 'PRESS'
+    }
+
+    # PASTED
+    # kmi = km.keymap_items.new(ObjectCursorArray.bl_idname, 'T', 'PRESS', ctrl=True, shift=True)
+    # https://docs.blender.org/api/2.82/bpy.types.KeyMapItem.html#bpy.types.KeyMapItem
+
     # total: bpy.props.IntProperty(name="Steps", default=2, min=1, max=100) # was for the shortcut context
 
     def execute(self, context):
         double_grid_scale()
         set_default_grid_settings()
-        #feedback:
-        #https://docs.blender.org/api/blender_python_api_2_75_release/bpy.types.Operator.html?highlight=report#bpy.types.Operator.report
+        # feedback:
+        # https://docs.blender.org/api/blender_python_api_2_75_release/bpy.types.Operator.html?highlight=report#bpy.types.Operator.report
         self.report({"INFO"}, "grid_scale = {}".format(get_grid_scale()))
         return {'FINISHED'}
 
 
 class ObjectHalfGridScale(bpy.types.Operator):
     """Object Half Grid Scale"""
-    # bl_idname = "object.half_grid_scale"
     bl_idname = "edit.half_grid_scale"
 
     bl_label = "Half Grid Scale"
     bl_options = {'REGISTER', 'UNDO'}
+
+    # pars listed here: https://docs.blender.org/api/2.82/bpy.types.KeyMapItems.html#bpy.types.KeyMapItems.new
+    # https://docs.blender.org/api/2.82/bpy.types.KeyMapItem.html
+    screen_editing_hotkey = {
+        "type": "NUMPAD_MINUS",  # NUMPAD_MINUS LEFT_BRACKET
+        "value": 'PRESS'
+    }
 
     def execute(self, context):
         set_default_grid_settings()
@@ -355,6 +357,51 @@ class ObjectOriginToCorner(bpy.types.Operator):
         origin_to_corner()
         return {'FINISHED'}
 
+
+class ObjectMoveToPosition(bpy.types.Operator):
+    """
+    for all selected objects move origin to base
+
+
+    getting the coordinates:
+    https://blender.stackexchange.com/questions/7576/how-can-i-use-a-python-script-to-get-the-transformation-of-an-object
+
+
+    """
+    bl_idname = "object.object_move_to_position"
+
+    bl_label = "Move to Position"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    # total: bpy.props.IntProperty(name="Steps", default=2, min=1, max=100)  # was for the shortcut context
+
+    # props
+    # https://docs.blender.org/api/current/bpy.types.Property.html#bpy.types.Property
+    # https://docs.blender.org/api/current/bpy.types.FloatProperty.html#bpy.types.FloatProperty
+
+    # position: bpy.props.FloatProperty(name="position", array_dimensions=3)  # was for the shortcut context
+    positionX: bpy.props.FloatProperty(name="positionX")  # was for the shortcut context
+    positionY: bpy.props.FloatProperty(name="positionY")  # was for the shortcut context
+    positionZ: bpy.props.FloatProperty(name="positionZ")  # was for the shortcut context
+
+    def execute(self, context):
+
+        sel_objs = bpy.context.selected_objects  # get selected objects
+        active_ob = bpy.context.view_layer.objects.active
+
+        for ob in sel_objs:
+
+            loc, rot, scale = ob.matrix_world.decompose()
+            # self.positionX = loc[0]
+            # self.positionY = loc[1]
+            # self.positionZ = loc[2]
+
+            print("FOUND: {} {}".format(ob, ob.name))
+            print("FOUND: {} ".format(dir(ob)))
+
+            ob.location = (self.positionX, self.positionY, self.positionZ)
+
+        return {'FINISHED'}
 
 def origin_to_center():
 
@@ -460,7 +507,7 @@ class ObjectCopyUVProjectModifier(bpy.types.Operator):
     """
     bl_idname = "object.copy_uv_project_modifier"
 
-    bl_label = "Copy UV Project modifier"
+    bl_label = "Add UV Project Modifier (with default uv projector links)"
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
@@ -548,11 +595,28 @@ register_list = [
 
     ObjectTestScriptA,
 
-    ObjectAutoMergeToggle
+    ObjectAutoMergeToggle,
+
+    ObjectMoveToPosition
 ]
 
 
+# def load_autoloading_classes():
+#     g = globals().copy()
+#     for name, obj in g.items():
+#         if inspect.isclass(obj):
+#             print("FSFSFS ", name)
+
+#             if not obj in register_list:
+#                 register_list.append(obj)
+
+# load_autoloading_classes()
+
+
 def register():
+
+
+    
 
     for ob in register_list:
         bpy.utils.register_class(ob)
@@ -565,15 +629,30 @@ def register():
     # so we have to check this to avoid nasty errors in background case.
     kc = wm.keyconfigs.addon
     if kc:
-        object_mode_keys = wm.keyconfigs.addon.keymaps.new(name='Screen Editing', space_type='EMPTY')  # name='Object Mode'
+        screen_editing_keys = wm.keyconfigs.addon.keymaps.new(name='Screen Editing', space_type='EMPTY')  # name='Object Mode'
+        # screen_editing_keys = wm.keyconfigs.addon.keymaps.new(name='3D View (Global)', space_type='EMPTY')  # name='Object Mode'
 
-        kmi1 = object_mode_keys.keymap_items.new(ObjectDoubleGridScale.bl_idname, double_key_shortcut, 'PRESS')  # double key
-        kmi2 = object_mode_keys.keymap_items.new(ObjectHalfGridScale.bl_idname, half_key_shortcut, 'PRESS')  # half key
+        object_mode_keys = wm.keyconfigs.addon.keymaps.new(name='Object Mode', space_type='EMPTY')  # name='Object Mode'
 
         # kmi.properties.total = 4 # not needed ?!?!?! https://devtalk.blender.org/t/official-keymap-example-does-not-work/9032
 
-        addon_keymaps.append((object_mode_keys, kmi1))  # saved so we can unregister
-        addon_keymaps.append((object_mode_keys, kmi2))  # saved so we can unregister
+        print("******DEBUG CHUNCK********")
+        print(dir())
+
+        for ob in register_list:
+            if hasattr(ob, 'screen_editing_hotkey') and ob.screen_editing_hotkey:  # FIND OUR CUSTOM KEY SETUP DICTS
+
+                pars_dict = {"idname": ob.bl_idname}  # building the pars dictionary to load into function
+                pars_dict.update(ob.screen_editing_hotkey)
+                kmi_A = screen_editing_keys.keymap_items.new(**pars_dict)  # ADD THE ACTUAL KEY (BECOMES LIVE HERE)
+                addon_keymaps.append((screen_editing_keys, kmi_A))  # stored for later access (optional)
+
+            if hasattr(ob, 'object_mode_hotkey') and ob.object_mode_hotkey:
+
+                pars_dict = {"idname": ob.bl_idname}
+                pars_dict.update(ob.object_mode_hotkey)
+                kmi_A = object_mode_keys.keymap_items.new(**pars_dict)
+                addon_keymaps.append((object_mode_keys, kmi_A))
 
 
 def unregister():

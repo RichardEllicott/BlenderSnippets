@@ -32,12 +32,20 @@ for modifier in selected_object.modifiers:
 print([modifier.identifier for modifier in bpy.types.Modifier.bl_rna.properties['type'].enum_items])
 
 
+# get object transform
+loc, rot, scale = ob.matrix_world.decompose()
+
+# rotate object euler:
+ob.rotation_euler = Euler((0.3, 0.3, 0.4), 'XYZ') # rotate object test
+
+
+
 
 def apply_to_selected_objects(fun, *args, **kwargs):
     """
     https://blender.stackexchange.com/questions/129955/looping-through-selected-objects-one-at-a-time
     """
-    sel_objs = [obj for obj in bpy.context.selected_objects if obj.type == 'MESH']
+    sel_objs = [obj for obj in bpy.context.selected_objects if obj.type == 'MESH'] # get selected objects
     bpy.ops.object.select_all(action='DESELECT')
     for obj in sel_objs:
         bpy.context.view_layer.objects.active = obj
