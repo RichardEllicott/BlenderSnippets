@@ -89,6 +89,21 @@ from mathutils import Matrix, Vector, Euler
 import math
 from collections import defaultdict
 
+
+# I DONT THINK THIS WORKS IN BLENDER
+import inspect
+def print_classes():
+    # https://stackoverflow.com/questions/1796180/how-can-i-get-a-list-of-all-classes-within-current-module-in-python
+    for name, obj in inspect.getmembers(sys.modules[__name__]):
+        if inspect.isclass(obj):
+            print(obj, " ++ ", name)
+
+
+
+
+
+
+
 print("\n" * 4)
 
 print("loading my_grid_double_shortcut_addon.blender2...")
@@ -437,10 +452,8 @@ class ObjectOriginToCenter(bpy.types.Operator):
 
 class ObjectTagCol(bpy.types.Operator):
     """
-    append object name with tag -col
+    ensure all selected objects end with the -col tag, allowing Godot to generate a static collider
 
-
-    designed to be used with Godot which uses various tags to load level data from Blender
 
     https://docs.godotengine.org/en/stable/getting_started/workflow/assets/importing_scenes.html?highlight=importing%20assets#godot-scene-importer
 
@@ -452,11 +465,31 @@ class ObjectTagCol(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
+        for ob in bpy.context.selected_objects:
+            if ob.type == 'MESH':  # only apply to mesh objects
+                if not ob.name.endswith("-col"):  # if already tagged, just ignore
 
-        for o in bpy.context.selected_objects:
-            if o.type == 'MESH':
-                if not o.name.endswith("-col"):
-                    o.name = o.name + "-col"  # MAIN BIT
+                    ob.name = ob.name.replace("-col", "")  # clean out any other -col tags, sometimes causing issues
+                    ob.name = ob.name + "-col"  # -col appended to end so Godot will find it
+
+        return {'FINISHED'}
+
+
+class ObjectRemoveTagCol(bpy.types.Operator):
+    """
+    opposite function designed to clear away the -col tags
+
+    """
+    bl_idname = "object.object_remove_tag_col"
+
+    bl_label = "Remove Object Name -col"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+
+        for ob in bpy.context.selected_objects:
+            if ob.type == 'MESH':
+                ob.name = ob.name.replace("-col", "")  # removes any existing "-col" sequences in name
 
         return {'FINISHED'}
 
@@ -566,6 +599,21 @@ class ObjectTestScriptA(bpy.types.Operator):
         return {'FINISHED'}
 
 
+
+class AUTOLOAD_ObjectTestScriptB(bpy.types.Operator):
+    """
+    """
+    bl_idname = "object.test_script_b"
+
+    bl_label = "Test Script B"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        print("running test script b...")
+
+        return {'FINISHED'}
+
+
 def menu_func(self, context):  # not used atm
     self.layout.operator(ObjectDoubleGridScale.bl_idname)
 
@@ -584,6 +632,7 @@ register_list = [
 
     ObjectTagCol,
     ObjectTagColIfRB,
+    ObjectRemoveTagCol,
 
     ObjectCopyUVProjectModifier,
 
@@ -609,8 +658,9 @@ register_list = [
 
 def register():
 
+    print("loading tunnel_tools_v1 by Richard Ellicott (https://github.com/RichardEllicott/BlenderSnippets)...")
 
-
+    print("load operators from register_list ({})".format(register_list))
 
     for ob in register_list:
         bpy.utils.register_class(ob)
@@ -664,4 +714,18 @@ def unregister():
 
 
 if __name__ == "__main__":
+
+
+
+    # REFLECTION code, will automatically add any classes that begin with "AUTOLOAD"
+    for name, obj in inspect.getmembers(sys.modules[__name__]):
+        if inspect.isclass(obj):
+            if name.startswith("AUTOLOAD"):
+                if not obj in register_list: # if not already in the register list
+                    register_list.append(obj) # add it
+
+                    print("OBJECT ADDED TO LIST!!")
+
+
+
     register()
