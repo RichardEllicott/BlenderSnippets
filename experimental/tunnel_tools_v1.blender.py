@@ -327,13 +327,13 @@ class ObjectHalfGridScale(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class ObjectOriginToBase(bpy.types.Operator):
+class ObjectOriginToBottom(bpy.types.Operator):
     """
-    for all selected objects move origin to base
+    for all selected objects move origin to bottom (middle of the base)
     """
-    bl_idname = "object.object_origin_to_base"
+    bl_idname = "object.object_origin_to_bottom"
 
-    bl_label = "Origin to Base"
+    bl_label = "Origin to Bottom"
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
@@ -355,7 +355,6 @@ class ObjectOriginToBase(bpy.types.Operator):
 
 class ObjectOriginToCorner(bpy.types.Operator):
     """
-    for all selected objects move origin to base
     """
     bl_idname = "object.object_origin_to_corner"
 
@@ -369,13 +368,6 @@ class ObjectOriginToCorner(bpy.types.Operator):
 
 class ObjectMoveToPosition(bpy.types.Operator):
     """
-    for all selected objects move origin to base
-
-
-    getting the coordinates:
-    https://blender.stackexchange.com/questions/7576/how-can-i-use-a-python-script-to-get-the-transformation-of-an-object
-
-
     """
     bl_idname = "object.object_move_to_position"
 
@@ -567,17 +559,21 @@ def add_custom_uv_to_ob(ob):
 
     SCALE = 2.0
 
-    if not GEN_NAME in ob.modifiers:
-
+    if not GEN_NAME in ob.modifiers: # if we don't have one already create it
         ob.modifiers.new(GEN_NAME, type='UV_PROJECT')  # THIS STYLE DOESN'T CHANGE THE ACTIVE SELECTED OBJECT
-        mod = ob.modifiers[GEN_NAME]  # POTENTIAL BUG: THIS MIGHT NOT HAVE THE RIGHT NAME
 
-        mod.projector_count = len(PROJECTOR_NAMES)  # set camera count
-        for (i, v) in enumerate(PROJECTOR_NAMES):
-            mod.projectors[i].object = bpy.data.objects[v]  # set all the cameras
-        mod.scale_x = SCALE
-        mod.scale_y = SCALE
-        mod.show_expanded = False
+    mod = ob.modifiers[GEN_NAME]  # POTENTIAL BUG: THIS MIGHT NOT HAVE THE RIGHT NAME
+
+    mod.projector_count = len(PROJECTOR_NAMES)  # set camera count
+    for (i, v) in enumerate(PROJECTOR_NAMES):
+        mod.projectors[i].object = bpy.data.objects[v]  # set all the cameras
+    mod.scale_x = SCALE
+    mod.scale_y = SCALE
+    mod.show_expanded = False
+
+
+    
+
 
 
 class ObjectTestScriptA(bpy.types.Operator):
@@ -626,7 +622,7 @@ register_list = [
     ObjectDoubleGridScale,
     ObjectHalfGridScale,
 
-    ObjectOriginToBase,
+    ObjectOriginToBottom,
     ObjectOriginToCorner,
     ObjectOriginToCenter,
 
