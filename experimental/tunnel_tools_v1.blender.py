@@ -17,7 +17,6 @@ bl_info = {
     "support": "COMMUNITY"
 }
 
-
 """
 
 
@@ -79,19 +78,66 @@ Dev issue notes:
 creating a panel menu thing: https://blender.stackexchange.com/questions/57306/how-to-create-a-custom-ui
 
 
+
+
+I STLL CAN"T GET https://github.com/Muthird/CommandRecorder2.8 working!!!
+need to try and fix bug
+it looks like something i might want to add to this
+
+
+Notes about my keymap i normally use
+
+Preferences -> Keymap -> Blender27X profile
+Preferences -> Keymap -> Remap all "View Selected" from "Numpad ." to "."
+Preferences -> Input -> Keyboard -> check "Emulate Numpad"
+3D View's "View" side panel > View > Clip (End) to 10'000 
+
+Preferences -> Input -> Addons:  (my choices)
+                            -Import-Export: Import-Export as glTF 2.0
+                            -Node: Node Wrangler
+                            -Add Mesh: Extra Objects (adds rock generator, regular solids, gears)
+                            -Add Curve: Extra Objects
+                            -Mesh: Loop Tools (you can take squares from sub and make into circle)
+
+                            -Object: Bool Tool
+                            
+                            -Node: Node Presets??? (allows to set a folder of node presets) (DID NOT WORK REPLACED WITH VX)
+                            -Material: Material Library (solves material issue)
+
+                            https://github.com/Lichtso/curve_cad
+                            Curve: Curve CAD Tools (may solve merging the paths vertices)
+                            THEN FOUND TO JUST DELETE, BUT CHECK THIS ANYWAY
+
+
+TODO ADDON:
+    make all vertices the same Y height, maybe based on the last selected
+    can you snap them to grid together?
+
+
+Football Pitch:
+
+middle to top of goal line
+105.0/2.0 - 16.5 pos 
+68.0/2.0 - 
+
+
+
+105.0/2.0 - 5.5 pos
+
+
+
 """
 
 
 import bpy
+import bmesh
 import sys
-import inspect  # scans for classes
+import inspect # scans for classes, i have a macro script looking for classes beginning with "AUTO"
 from mathutils import Matrix, Vector, Euler
 import math
 from collections import defaultdict
 
 
-# I DONT THINK THIS WORKS IN BLENDER
-import inspect
 def print_classes():
     # https://stackoverflow.com/questions/1796180/how-can-i-get-a-list-of-all-classes-within-current-module-in-python
     for name, obj in inspect.getmembers(sys.modules[__name__]):
@@ -99,28 +145,30 @@ def print_classes():
             print(obj, " ++ ", name)
 
 
-
-
-
-
-
 print("\n" * 4)
 
 print("loading my_grid_double_shortcut_addon.blender2...")
 
 
+
+
+
+# load Blender ICE Library...
+# this is an experimental way of loading a library from an absolute path, it also forces a refresh so you can edit the library
+# then reload this script in blender
+
+libray_path = "/Users/rich/Documents/GitHub/myrepos/BlenderSnippets/experimental"
+
 def add_library_search_path(path):
     if not path in sys.path:
         sys.path.append(path)
 
+add_library_search_path(libray_path)
 
-# load Blender ICE Library...
-add_library_search_path("/Users/rich/Documents/GitHub/myrepos/BlenderSnippets/experimental")
-
-import blender_ice_library as ice
+import blender_ice_library as ice 
 
 import importlib  # import internals
-importlib.reload(ice)  # force reload
+importlib.reload(ice)  # force reload of library
 
 
 # Preferences:
@@ -131,6 +179,111 @@ importlib.reload(ice)  # force reload
 # Begin Plugin
 
 # Functions:
+
+
+
+
+def select_vertices_same_height():
+    """
+    to make all selected vertices same height
+    https://www.blender.org/forum/viewtopic.php?t=18220
+
+    in edit mode, select vertices, last one is height
+    S 0-> Z -> 0 -> LMB
+
+    scale -> Z only -> 0 scale -> LMB to finish
+    """
+
+    # just gets selected indexes as dicts of selected objects
+    # https://blender.stackexchange.com/questions/1412/efficient-way-to-get-selected-vertices-via-python-without-iterating-over-the-en
+
+    # # MORE ADVANCED SNIPPET AS IT GETS ALL OBJECTS IN EDIT MODE (SINCE 2.8 MULTI OBJECT EDIT MODe)
+    dic_v = {}
+    vertices = []
+    for o in bpy.context.objects_in_mode:
+        dic_v.update( {o : []} )
+        bm = bmesh.from_edit_mesh(o.data)
+        n = 0
+        for v in bm.verts:
+            if v.select:
+                dic_v[o].append(v.index)
+                vertices.append(v)
+
+
+
+            n+=1
+    print(dic_v)
+    print(vertices)
+
+    for v in vertices:
+        # v.co.z = vertices[len(vertices)-1].co.z
+
+        v.co.z = vertices[0].co.z
+
+
+    # THE VIEW DOES NOT REFRESH, SO FLICK TO OBJECT AND BACK!
+    #https://blender.stackexchange.com/questions/98863/update-edge-info-when-using-script-in-edit-mode
+    bpy.ops.object.editmode_toggle() # HACK
+    bpy.ops.object.editmode_toggle() # HACK
+
+    # UNFORTUNATLY WE CANNOT SEEM TO WORK OUT THE LAST SELECTED VERTEX, SO MAYBE USE THE LOWEST ONE?
+
+
+
+
+
+def get_vertex_positions():
+    """
+    https://blender.stackexchange.com/questions/1311/how-can-i-get-vertex-positions-from-a-mesh
+
+    fucked
+    """
+    obj = bpy.context.active_object
+
+    if obj.mode == 'EDIT':
+        bm = bmesh.from_edit_mesh(obj.data)
+        vertices = bm.verts
+
+    else:
+        vertices = obj.data.vertices
+
+    verts = [obj.matrix_world * vert.co for vert in vertices] 
+
+    # coordinates as tuples
+    plain_verts = [vert.to_tuple() for vert in verts]
+    print(plain_verts)
+
+
+
+class AUTO_ObjectVerticesSameHeight(bpy.types.Operator):
+    """Object Double Grid Scale"""
+    # bl_idname = "object.double_grid_scale"
+    bl_idname = "edit.vertices_same_height"
+
+    bl_label = "Vertices Same Height"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    # screen_editing_hotkey = {
+    #     # NUMPAD_PLUS RIGHT_BRACKET https://docs.blender.org/api/2.82/bpy.types.KeyMapItem.html#bpy.types.KeyMapItem.type
+    #     "type": "NUMPAD_PLUS",
+    #     "value": 'PRESS'
+    # }
+
+    # PASTED
+    # kmi = km.keymap_items.new(ObjectCursorArray.bl_idname, 'T', 'PRESS', ctrl=True, shift=True)
+    # https://docs.blender.org/api/2.82/bpy.types.KeyMapItem.html#bpy.types.KeyMapItem
+
+    # total: bpy.props.IntProperty(name="Steps", default=2, min=1, max=100) # was for the shortcut context
+
+    def execute(self, context):
+        select_vertices_same_height()
+
+        # double_grid_scale()
+        # set_default_grid_settings()
+        # # feedback:
+        # # https://docs.blender.org/api/blender_python_api_2_75_release/bpy.types.Operator.html?highlight=report#bpy.types.Operator.report
+        # self.report({"INFO"}, "grid_scale = {}".format(get_grid_scale()))
+        return {'FINISHED'}
 
 
 def origin_to_bottom(ob, matrix=Matrix()):
@@ -148,7 +301,7 @@ def origin_to_bottom(ob, matrix=Matrix()):
     mw.translation = mw @ o
 
 
-def origin_to_corner():  # on all selected
+def origin_to_corner(corner=0):  # on all selected
     """
 
     of all selected mesh
@@ -158,6 +311,15 @@ def origin_to_corner():  # on all selected
     note this code is only for ALL SELECTED, this is because it doesn't apply the operation to mesh more than once if they're linked
     (maybe a little ott, so recoding to simple version)
 
+
+    0 left back bottom 0,0,0
+    1 left back top 0,0,1
+    2 left forward top  0,1,1
+    3 left forward bottom 0,1,0
+    4 right back bottom 1,0,0
+    5 right back top 1,0,1
+    6 right forward top 1,1,1
+    7 right forward bottom 1,1,0
     """
 
     context = bpy.context
@@ -170,11 +332,35 @@ def origin_to_corner():  # on all selected
     for me, obs in meshobs.items():
         o = obs[0]
         bbox = [Vector(b) for b in o.bound_box]
-        lhc = bbox[0]
+        # lhc = bbox[0] # ORGINAL left bottom
+        lhc = bbox[corner]  # NEW
         T = Matrix.Translation(-lhc)
         me.transform(T)
         for o in obs:
             o.matrix_world.translation = o.matrix_world @ lhc
+
+
+def origin_to_center():
+    """
+    """
+
+    # SAVES THE SELECTED OBJECTS
+    sel_objs = bpy.context.selected_objects  # get selected objects
+    active_ob = bpy.context.view_layer.objects.active
+
+    bpy.ops.object.select_all(action='DESELECT')  # deselect all
+
+    for ob in sel_objs:
+        if ob.type == 'MESH':
+            ob.select_set(state=True)  # select the object
+            bpy.context.view_layer.objects.active = ob
+            bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY', center='BOUNDS')  # only works on selected object
+
+    # RESTORES THE SELECTED OBJECTS
+    bpy.ops.object.select_all(action='DESELECT')  # deselect all
+    for ob in sel_objs:
+        ob.select_set(state=True)  # select
+    bpy.context.view_layer.objects.active = active_ob
 
 
 def get_3D_area_object():
@@ -199,6 +385,9 @@ def get_3D_area_object():
 
 
 def set_automerge(setting):
+    """
+    WAS USED, BUT THEN FOUND ICON!
+    """
     # ob = get_3D_area_object()
     bpy.context.tool_settings.use_mesh_automerge = setting
 
@@ -259,25 +448,40 @@ def set_default_grid_settings():
     set_grid_subdivisons(8)
 
 
-class ObjectAutoMergeToggle(bpy.types.Operator):
+def add_custom_uv_to_ob(ob):
     """
-    Adding a shortcut for auto merge vertices
+    sets up my custom UV on object
+
+    doesn't change object selection
+
     """
-    # bl_idname = "object.double_grid_scale"
-    bl_idname = "edit.auto_merge_toggle"
+    GEN_NAME = "UVProjectGen"  # name is required to retrieve modifier
 
-    bl_label = "Auto Merge Vertices"
-    bl_options = {'REGISTER', 'UNDO'}
+    PROJECTOR_NAMES = [  # names of projectors to add
+        "_1_UVBack",
+        "_2_UVFront",
+        "_3_UVBottom",
+        "_4_UVTop",
+        "_5_UVLeft",
+        "_6_UVRight",
+    ]
 
-    # total: bpy.props.IntProperty(name="Steps", default=2, min=1, max=100) # was for the shortcut context
+    SCALE = 2.0
 
-    def execute(self, context):
-        set_automerge(not get_automerge())  # toggle
+    if not GEN_NAME in ob.modifiers:  # if we don't have one already create it
+        ob.modifiers.new(GEN_NAME, type='UV_PROJECT')  # THIS STYLE DOESN'T CHANGE THE ACTIVE SELECTED OBJECT
 
-        return {'FINISHED'}
+    mod = ob.modifiers[GEN_NAME]  # POTENTIAL BUG: THIS MIGHT NOT HAVE THE RIGHT NAME
+
+    mod.projector_count = len(PROJECTOR_NAMES)  # set camera count
+    for (i, v) in enumerate(PROJECTOR_NAMES):
+        mod.projectors[i].object = bpy.data.objects[v]  # set all the cameras
+    mod.scale_x = SCALE
+    mod.scale_y = SCALE
+    mod.show_expanded = False
 
 
-class ObjectDoubleGridScale(bpy.types.Operator):
+class AUTO_ObjectDoubleGridScale(bpy.types.Operator):
     """Object Double Grid Scale"""
     # bl_idname = "object.double_grid_scale"
     bl_idname = "edit.double_grid_scale"
@@ -306,7 +510,7 @@ class ObjectDoubleGridScale(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class ObjectHalfGridScale(bpy.types.Operator):
+class AUTO_ObjectHalfGridScale(bpy.types.Operator):
     """Object Half Grid Scale"""
     bl_idname = "edit.half_grid_scale"
 
@@ -327,7 +531,7 @@ class ObjectHalfGridScale(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class ObjectOriginToBottom(bpy.types.Operator):
+class AUTO_ObjectOriginToBottom(bpy.types.Operator):
     """
     for all selected objects move origin to bottom (middle of the base)
     """
@@ -353,7 +557,7 @@ class ObjectOriginToBottom(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class ObjectOriginToCorner(bpy.types.Operator):
+class AUTO_ObjectOriginToCorner(bpy.types.Operator):
     """
     """
     bl_idname = "object.object_origin_to_corner"
@@ -366,7 +570,7 @@ class ObjectOriginToCorner(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class ObjectMoveToPosition(bpy.types.Operator):
+class AUTO_ObjectMoveToPosition(bpy.types.Operator):
     """
     """
     bl_idname = "object.object_move_to_position"
@@ -404,28 +608,8 @@ class ObjectMoveToPosition(bpy.types.Operator):
 
         return {'FINISHED'}
 
-def origin_to_center():
 
-    # SAVES THE SELECTED OBJECTS
-    sel_objs = bpy.context.selected_objects  # get selected objects
-    active_ob = bpy.context.view_layer.objects.active
-
-    bpy.ops.object.select_all(action='DESELECT')  # deselect all
-
-    for ob in sel_objs:
-        if ob.type == 'MESH':
-            ob.select_set(state=True)  # select the object
-            bpy.context.view_layer.objects.active = ob
-            bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY', center='BOUNDS')  # only works on selected object
-
-    # RESTORES THE SELECTED OBJECTS
-    bpy.ops.object.select_all(action='DESELECT')  # deselect all
-    for ob in sel_objs:
-        ob.select_set(state=True)  # select
-    bpy.context.view_layer.objects.active = active_ob
-
-
-class ObjectOriginToCenter(bpy.types.Operator):
+class AUTO_ObjectOriginToCenter(bpy.types.Operator):
     """
     for all selected objects move origin to base
     """
@@ -442,7 +626,7 @@ class ObjectOriginToCenter(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class ObjectTagCol(bpy.types.Operator):
+class AUTO_ObjectTagCol(bpy.types.Operator):
     """
     ensure all selected objects end with the -col tag, allowing Godot to generate a static collider
 
@@ -467,7 +651,7 @@ class ObjectTagCol(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class ObjectRemoveTagCol(bpy.types.Operator):
+class AUTO_ObjectRemoveTagCol(bpy.types.Operator):
     """
     opposite function designed to clear away the -col tags
 
@@ -486,7 +670,7 @@ class ObjectRemoveTagCol(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class ObjectTagColIfRB(bpy.types.Operator):
+class AUTO_ObjectTagColIfRB(bpy.types.Operator):
     """
     Objects with Passive rigidbody become Static colliders
 
@@ -516,7 +700,7 @@ class ObjectTagColIfRB(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class ObjectCopyUVProjectModifier(bpy.types.Operator):
+class AUTO_ObjectCopyUVProjectModifier(bpy.types.Operator):
     """
     testing adding modifiers etc
 
@@ -539,44 +723,7 @@ class ObjectCopyUVProjectModifier(bpy.types.Operator):
         return {'FINISHED'}
 
 
-def add_custom_uv_to_ob(ob):
-    """
-    sets up my custom UV on object
-
-    doesn't change object selection
-
-    """
-    GEN_NAME = "UVProjectGen"  # name is required to retrieve modifier
-
-    PROJECTOR_NAMES = [  # names of projectors to add
-        "_1_UVBack",
-        "_2_UVFront",
-        "_3_UVBottom",
-        "_4_UVTop",
-        "_5_UVLeft",
-        "_6_UVRight",
-    ]
-
-    SCALE = 2.0
-
-    if not GEN_NAME in ob.modifiers: # if we don't have one already create it
-        ob.modifiers.new(GEN_NAME, type='UV_PROJECT')  # THIS STYLE DOESN'T CHANGE THE ACTIVE SELECTED OBJECT
-
-    mod = ob.modifiers[GEN_NAME]  # POTENTIAL BUG: THIS MIGHT NOT HAVE THE RIGHT NAME
-
-    mod.projector_count = len(PROJECTOR_NAMES)  # set camera count
-    for (i, v) in enumerate(PROJECTOR_NAMES):
-        mod.projectors[i].object = bpy.data.objects[v]  # set all the cameras
-    mod.scale_x = SCALE
-    mod.scale_y = SCALE
-    mod.show_expanded = False
-
-
-    
-
-
-
-class ObjectTestScriptA(bpy.types.Operator):
+class AUTO_ObjectTestScriptA(bpy.types.Operator):
     """
     testing adding modifiers etc
 
@@ -595,8 +742,7 @@ class ObjectTestScriptA(bpy.types.Operator):
         return {'FINISHED'}
 
 
-
-class AUTOLOAD_ObjectTestScriptB(bpy.types.Operator):
+class AUTO_ObjectTestScriptB(bpy.types.Operator):
     """
     """
     bl_idname = "object.test_script_b"
@@ -617,39 +763,7 @@ def menu_func(self, context):  # not used atm
 # store keymaps here to access after registration
 addon_keymaps = []
 
-
-register_list = [
-    ObjectDoubleGridScale,
-    ObjectHalfGridScale,
-
-    ObjectOriginToBottom,
-    ObjectOriginToCorner,
-    ObjectOriginToCenter,
-
-    ObjectTagCol,
-    ObjectTagColIfRB,
-    ObjectRemoveTagCol,
-
-    ObjectCopyUVProjectModifier,
-
-    ObjectTestScriptA,
-
-    ObjectAutoMergeToggle,
-
-    ObjectMoveToPosition
-]
-
-
-# def load_autoloading_classes():
-#     g = globals().copy()
-#     for name, obj in g.items():
-#         if inspect.isclass(obj):
-#             print("FSFSFS ", name)
-
-#             if not obj in register_list:
-#                 register_list.append(obj)
-
-# load_autoloading_classes()
+register_list = []  # automatically add classes beginning with "AUTO" here, for auto register
 
 
 def register():
@@ -711,17 +825,15 @@ def unregister():
 
 if __name__ == "__main__":
 
+    macro_keyword = "AUTO"
 
-
-    # REFLECTION code, will automatically add any classes that begin with "AUTOLOAD"
+    # REFLECTION code, will automatically add any classes that begin with "AUTO"
     for name, obj in inspect.getmembers(sys.modules[__name__]):
         if inspect.isclass(obj):
-            if name.startswith("AUTOLOAD"):
-                if not obj in register_list: # if not already in the register list
-                    register_list.append(obj) # add it
+            if name.startswith(macro_keyword):
+                if not obj in register_list:  # if not already in the register list
+                    register_list.append(obj)  # add it
 
-                    print("OBJECT ADDED TO LIST!!")
-
-
+                    print("class automatically loaded: \"{}\"".format(obj, macro_keyword))
 
     register()
