@@ -93,20 +93,22 @@ Preferences -> Input -> Keyboard -> check "Emulate Numpad"
 3D View's "View" side panel > View > Clip (End) to 10'000 
 
 Preferences -> Input -> Addons:  (my choices)
-                            -Import-Export: Import-Export as glTF 2.0
-                            -Node: Node Wrangler
-                            -Add Mesh: Extra Objects (adds rock generator, regular solids, gears)
-                            -Add Curve: Extra Objects
-                            -Mesh: Loop Tools (you can take squares from sub and make into circle)
+    -Import-Export: Import-Export as glTF 2.0
+    -Node: Node Wrangler
+    -Import-Export: Import Images as Planes
+    -Add Mesh: Extra Objects (adds rock generator, regular solids, gears)
+    -Add Curve: Extra Objects
+    -Mesh: Loop Tools (you can take squares from sub and make into circle)
 
-                            -Object: Bool Tool
-                            
-                            -Node: Node Presets??? (allows to set a folder of node presets) (DID NOT WORK REPLACED WITH VX)
-                            -Material: Material Library (solves material issue)
 
-                            https://github.com/Lichtso/curve_cad
-                            Curve: Curve CAD Tools (may solve merging the paths vertices)
-                            THEN FOUND TO JUST DELETE, BUT CHECK THIS ANYWAY
+    -Object: Bool Tool
+    
+    -Node: Node Presets??? (allows to set a folder of node presets) (DID NOT WORK REPLACED WITH VX)
+    -Material: Material Library (solves material issue)
+
+    https://github.com/Lichtso/curve_cad
+    Curve: Curve CAD Tools (may solve merging the paths vertices)
+    THEN FOUND TO JUST DELETE, BUT CHECK THIS ANYWAY
 
 
 TODO ADDON:
@@ -125,6 +127,11 @@ middle to top of goal line
 105.0/2.0 - 5.5 pos
 
 
+FEATURE SUGGESTIONS
+
+Snap object down to collider blender?
+
+
 
 """
 
@@ -132,8 +139,9 @@ middle to top of goal line
 import bpy
 import bmesh
 import sys
-import inspect # scans for classes, i have a macro script looking for classes beginning with "AUTO"
+import inspect  # scans for classes, i have a macro script looking for classes beginning with "AUTO"
 from mathutils import Matrix, Vector, Euler
+import random
 import math
 from collections import defaultdict
 
@@ -150,22 +158,21 @@ print("\n" * 4)
 print("loading my_grid_double_shortcut_addon.blender2...")
 
 
-
-
-
 # load Blender ICE Library...
 # this is an experimental way of loading a library from an absolute path, it also forces a refresh so you can edit the library
 # then reload this script in blender
 
 libray_path = "/Users/rich/Documents/GitHub/myrepos/BlenderSnippets/experimental"
 
+
 def add_library_search_path(path):
     if not path in sys.path:
         sys.path.append(path)
 
+
 add_library_search_path(libray_path)
 
-import blender_ice_library as ice 
+import blender_ice_library as ice
 
 import importlib  # import internals
 importlib.reload(ice)  # force reload of library
@@ -179,8 +186,6 @@ importlib.reload(ice)  # force reload of library
 # Begin Plugin
 
 # Functions:
-
-
 
 
 def select_vertices_same_height():
@@ -201,7 +206,7 @@ def select_vertices_same_height():
     dic_v = {}
     vertices = []
     for o in bpy.context.objects_in_mode:
-        dic_v.update( {o : []} )
+        dic_v.update({o: []})
         bm = bmesh.from_edit_mesh(o.data)
         n = 0
         for v in bm.verts:
@@ -209,9 +214,7 @@ def select_vertices_same_height():
                 dic_v[o].append(v.index)
                 vertices.append(v)
 
-
-
-            n+=1
+            n += 1
     print(dic_v)
     print(vertices)
 
@@ -220,16 +223,12 @@ def select_vertices_same_height():
 
         v.co.z = vertices[0].co.z
 
-
     # THE VIEW DOES NOT REFRESH, SO FLICK TO OBJECT AND BACK!
-    #https://blender.stackexchange.com/questions/98863/update-edge-info-when-using-script-in-edit-mode
-    bpy.ops.object.editmode_toggle() # HACK
-    bpy.ops.object.editmode_toggle() # HACK
+    # https://blender.stackexchange.com/questions/98863/update-edge-info-when-using-script-in-edit-mode
+    bpy.ops.object.editmode_toggle()  # HACK
+    bpy.ops.object.editmode_toggle()  # HACK
 
     # UNFORTUNATLY WE CANNOT SEEM TO WORK OUT THE LAST SELECTED VERTEX, SO MAYBE USE THE LOWEST ONE?
-
-
-
 
 
 def get_vertex_positions():
@@ -247,12 +246,11 @@ def get_vertex_positions():
     else:
         vertices = obj.data.vertices
 
-    verts = [obj.matrix_world * vert.co for vert in vertices] 
+    verts = [obj.matrix_world * vert.co for vert in vertices]
 
     # coordinates as tuples
     plain_verts = [vert.to_tuple() for vert in verts]
     print(plain_verts)
-
 
 
 class AUTO_ObjectVerticesSameHeight(bpy.types.Operator):
@@ -425,18 +423,6 @@ def half_grid_scale():
 def double_grid_scale():
     set_grid_scale(get_grid_scale() * 2.0)
 
-def select_all(): bpy.ops.object.select_all(action='SELECT')  # select all
-
-
-def deselect_all(): bpy.ops.object.select_all(action='DESELECT')  # deselect all
-
-
-def select_object(ob):  # https://devtalk.blender.org/t/selecting-an-object-in-2-8/4177
-    ob.select_set(state=True)
-    bpy.context.view_layer.objects.active = ob
-
-# Blender Operator Objects:
-
 
 def set_default_grid_settings():
     """
@@ -479,6 +465,242 @@ def add_custom_uv_to_ob(ob):
     mod.scale_x = SCALE
     mod.scale_y = SCALE
     mod.show_expanded = False
+
+
+# PROCEDURAL GENERATION FUNCTIONS:
+
+def remove_object(ob):
+    bpy.data.objects.remove(ob, do_unlink=True)  # remove an object from scene (note, reload to fully clear memory)
+
+
+def remove_scene_objects(key=None):
+    """
+    remove all objects beginning with a key (which marks the generated objects)
+    """
+    for ob in bpy.context.scene.objects:
+        if key:
+            if ob.name.startswith(key):
+                bpy.data.objects.remove(ob, do_unlink=True)  # best option to delete, unlink first
+        else:
+            bpy.data.objects.remove(ob, do_unlink=True)  # best option to delete, unlink first
+
+
+def select_all(): bpy.ops.object.select_all(action='SELECT')
+
+def deselect_all(): bpy.ops.object.select_all(action='DESELECT')
+
+
+def select_object(ob):  # https://devtalk.blender.org/t/selecting-an-object-in-2-8/4177
+    ob.select_set(state=True)
+    bpy.context.view_layer.objects.active = ob
+
+
+def edit_mode():  # must have an object selected to enter this mode
+    bpy.ops.object.mode_set(mode='EDIT')
+
+
+def object_mode():
+    bpy.ops.object.mode_set(mode='OBJECT')
+
+
+def primitive_plane_add(**kwargs):  # reflection
+    bpy.ops.mesh.primitive_plane_add(**kwargs)  # edit to new standards
+    ob = bpy.context.active_object
+    # ob.name = gen_key + ob.name  # set name
+    ob.data.materials.append(default_material)  # add material
+    created_objects.append(ob)
+    return ob
+
+
+def primitive_cube_add(**kwargs):
+    bpy.ops.mesh.primitive_cube_add(**kwargs)  # edit to new standards
+    ob = bpy.context.active_object
+    # ob.name = gen_key + ob.name  # set name
+    ob.data.materials.append(default_material)  # add material
+    created_objects.append(ob)
+    return ob
+
+
+def point_cloud(ob_name, coords, edges=[], faces=[]):
+    """
+    Create point cloud object based on given coordinates and name.
+
+    Keyword arguments:
+    ob_name -- new object name
+    coords -- float triplets eg: [(-1.0, 1.0, 0.0), (-1.0, -1.0, 0.0)]
+
+    #https://blender.stackexchange.com/questions/23086/add-a-simple-vertex-via-python
+
+    """
+
+    # Create new mesh and a new object
+    me = bpy.data.meshes.new(ob_name + "Mesh")
+    ob = bpy.data.objects.new(ob_name, me)
+
+    # Make a mesh from a list of vertices/edges/faces
+    me.from_pydata(coords, edges, faces)
+
+    # Display name and update the mesh
+    ob.show_name = True
+    me.update()
+
+    # Link object to the active collection
+    bpy.context.collection.objects.link(ob)
+
+    return ob
+
+
+def get_selected_verts():
+    """
+    returns a dictionary to handle the multi-object support
+    https://blender.stackexchange.com/questions/1412/efficient-way-to-get-selected-vertices-via-python-without-iterating-over-the-en
+    """
+    dic_v = {}
+    for o in bpy.context.objects_in_mode:
+        dic_v.update({o: []})
+        bm = bmesh.from_edit_mesh(o.data)
+        for v in bm.verts:
+            if v.select:
+                dic_v[o].append(v.index)
+
+    return dic_v
+
+
+def select_vert(id):
+    """
+    bad looking hack selects a vert
+
+    this very likely breaks if multiple objects are selected
+    """
+
+    bpy.ops.object.mode_set(mode='OBJECT')  # we need to exit out to object mode
+    obj = bpy.context.active_object  # get the active object
+    bpy.ops.object.mode_set(mode='EDIT')  # back to edit mode
+    bpy.ops.mesh.select_mode(type="VERT")  # vert mode
+    bpy.ops.mesh.select_all(action='DESELECT')  # ensure nothing else selected
+    bpy.ops.object.mode_set(mode='OBJECT')  # back to object mode to select the vert!
+    obj.data.vertices[id].select = True  # ensure selected vert
+    bpy.ops.object.mode_set(mode='EDIT')  # back to edit mode!
+
+
+def extrude_vert(translation=(0, 0, 1)):
+    bpy.ops.mesh.extrude_region_move(TRANSFORM_OT_translate={"value": translation})  # extrude selected vert
+
+
+def my_tree_generator():
+
+    gen_key = "MyTreeGenTreeA"  # IMPORTANT KEY FOR REFERENCE
+
+    remove_scene_objects(gen_key)  # remove previous tree
+
+    ob = point_cloud(gen_key, [(0.0, 0.0, 0.0)])
+
+    select_object(ob)
+    edit_mode()
+
+    # bpy.ops.mesh.extrude_region_move(TRANSFORM_OT_translate={"value":(0, 0, 1)}) # extrude selected vert
+    # bpy.ops.mesh.extrude_region_move(TRANSFORM_OT_translate={"value":(0, 0, 1)}) # extrude selected vert
+
+    print("***SELECTED VERT DEBUG***")
+    print(get_selected_verts())
+
+    # select_vert(0)
+
+    # bpy.ops.transform.skin_resize(value=(2.0, 2.0, 2.0), orient_type='GLOBAL', orient_matrix=((1, 0, 0), (0, 1, 0), (0, 0, 1)), orient_matrix_type='GLOBAL', mirror=True, use_proportional_edit=False, proportional_edit_falloff='SMOOTH', proportional_size=1, use_proportional_connected=False, use_proportional_projected=False)
+    # bpy.ops.transform.skin_resize(value=(2.0, 2.0, 2.0))
+
+    # add the skin modifier
+    modifier_name = "SKINGEN"
+    ob.modifiers.new(modifier_name, type='SKIN')  # THIS STYLE DOESN'T CHANGE THE ACTIVE SELECTED OBJECT
+    mod = ob.modifiers[modifier_name]  # POTENTIAL BUG: THIS MIGHT NOT HAVE THE RIGHT NAME
+
+    # and sub
+    modifier_name = "SUBDIV"
+    ob.modifiers.new(modifier_name, type='SUBSURF')  # THIS STYLE DOESN'T CHANGE THE ACTIVE SELECTED OBJECT
+    mod = ob.modifiers[modifier_name]  # POTENTIAL BUG: THIS MIGHT NOT HAVE THE RIGHT NAME
+    mod.levels = 1
+    mod.render_levels = 2
+    mod.quality = 3
+
+    object_mode()
+
+    base_radius = 8.0
+
+    # changing the vert skin radius (must be done in object mode)
+    # https://blender.stackexchange.com/questions/1592/access-skin-modifier-radius-data
+    ob.data.skin_vertices[0].data[0].radius = base_radius, base_radius  # makes the first radius 1.0
+
+    node_list = [{'id': 0, 'depth': 1, 'direction': Vector((0.0, 0.0, 1.0))}]
+
+
+    noise = 1.0/2.0
+
+
+    max_branch_size = 6
+
+
+    extrude_length = 16.0
+
+    while len(node_list) > 0:
+
+        data = node_list.pop()
+        vert = data['id']
+        depth = data['depth']
+        direction = data['direction']
+
+        
+        direction = Vector(
+            (direction.x + (random.uniform(-1.0, 1.0) * noise),
+                direction.y + (random.uniform(-1.0, 1.0) * noise),
+                direction.z + (random.uniform(-1.0, 1.0) * noise)))
+        direction.normalize() # normalize the vector
+
+
+        # ALL VERTS GET THE RADIUS SET
+        select_vert(vert)
+        branch_radius = 1.0 / depth * base_radius
+        object_mode()
+        ob.data.skin_vertices[0].data[vert].radius = branch_radius, branch_radius
+        edit_mode()
+
+        if depth < max_branch_size:  # ONLY ADD NEW NODES SHOULD THEY NOT BE OVER MAX DEPTH
+
+            select_vert(vert)  # ensure vert selected
+            extrude_vert(direction * extrude_length)  # extrude up
+            selected_verts = get_selected_verts()[bpy.data.objects[gen_key]]  # read new selected verts
+            node_list.append({'id': selected_verts[0], 'depth': depth + 1, 'direction': direction})  # append it to the recursion list
+
+        pass
+
+
+class AUTO_MyTreeGenerator(bpy.types.Operator):
+    """
+
+    Object My Tree Generator
+
+
+    starting with a manual way, maybe we should use bmesh?
+    https://docs.blender.org/api/current/bmesh.html
+
+
+
+
+
+    """
+    # bl_idname = "object.double_grid_scale"
+    bl_idname = "edit.my_tree_generator"
+
+    bl_label = "My Tree Generator"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    # total: bpy.props.IntProperty(name="Steps", default=2, min=1, max=100) # was for the shortcut context
+
+    def execute(self, context):
+        print("running my tree generator...")
+
+        my_tree_generator()
+
+        return {'FINISHED'}
 
 
 class AUTO_ObjectDoubleGridScale(bpy.types.Operator):
@@ -630,6 +852,8 @@ class AUTO_ObjectTagCol(bpy.types.Operator):
     """
     ensure all selected objects end with the -col tag, allowing Godot to generate a static collider
 
+    ignore any objects that have the tag "<nocol>" in name
+
 
     https://docs.godotengine.org/en/stable/getting_started/workflow/assets/importing_scenes.html?highlight=importing%20assets#godot-scene-importer
 
@@ -646,7 +870,9 @@ class AUTO_ObjectTagCol(bpy.types.Operator):
                 if not ob.name.endswith("-col"):  # if already tagged, just ignore
 
                     ob.name = ob.name.replace("-col", "")  # clean out any other -col tags, sometimes causing issues
-                    ob.name = ob.name + "-col"  # -col appended to end so Godot will find it
+
+                    if not "<nocol>" in ob.name:  # special ignore tag (nocol)
+                        ob.name = ob.name + "-col"  # -col appended to end so Godot will find it
 
         return {'FINISHED'}
 
