@@ -88,8 +88,8 @@ it looks like something i might want to add to this
 Notes about my keymap i normally use
 
 Preferences -> Keymap -> Blender27X profile
-Preferences -> Keymap -> Remap all "View Selected" from "Numpad ." to "."
-Preferences -> Input -> Keyboard -> check "Emulate Numpad"
+Preferences -> Keymap -> Remap all "View Selected" from "Numpad ." to "."   ----- Now "Frame Selected" to "." (not "Numpad .")
+Preferences -> Input -> Keyboard -> check "Emulate Numpad" ("Emulate Numpad" now doesn't emulate "Numpad ." for the "." key )
 3D View's "View" side panel > View > Clip (End) to 10'000 
 
 Preferences -> Input -> Addons:  (my choices)
