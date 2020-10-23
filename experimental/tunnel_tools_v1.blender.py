@@ -133,6 +133,13 @@ Snap object down to collider blender?
 
 
 
+Moving to 2.9 Notes
+
+maybe the search menu solved by this:
+https://docs.blender.org/manual/en/latest/interface/controls/templates/operator_search.html#bpy-ops-wm-search-operator
+
+
+
 """
 
 
