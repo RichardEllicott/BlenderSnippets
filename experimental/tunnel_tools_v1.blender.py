@@ -101,6 +101,8 @@ Preferences -> Input -> Addons:  (my choices)
     -Mesh: Loop Tools (you can take squares from sub and make into circle)
 
 
+
+
     -Object: Bool Tool
     
     -Node: Node Presets??? (allows to set a folder of node presets) (DID NOT WORK REPLACED WITH VX)
@@ -109,6 +111,9 @@ Preferences -> Input -> Addons:  (my choices)
     https://github.com/Lichtso/curve_cad
     Curve: Curve CAD Tools (may solve merging the paths vertices)
     THEN FOUND TO JUST DELETE, BUT CHECK THIS ANYWAY
+
+
+    -Drop It Addon (https://gumroad.com/l/drop_it) (can drop trees and objects on ground)
 
 
 TODO ADDON:
@@ -905,15 +910,20 @@ class AUTO_ObjectRemoveTagCol(bpy.types.Operator):
 
 class AUTO_ObjectTagColIfRB(bpy.types.Operator):
     """
-    Objects with Passive rigidbody become Static colliders
+    
+    Uses my custom tagging system that overcomes issues when duplicating objects (with the numbers)
 
-    Objects with Active rigidbody become rigidbody colliders
+
+    While working in blender I leave tags like <col> etc in the names
+
+    This script would convert "Cube<col>.004" => "Cube<col>.004-col"
+
 
 
     """
     bl_idname = "object.object_tag_col_ifrb"
 
-    bl_label = "Append Object Name -col (IF RB IS ACTIVE EXPERIMENTAL)"
+    bl_label = "Append Object Name -col (based on existed <col> tags)"
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
@@ -922,13 +932,30 @@ class AUTO_ObjectTagColIfRB(bpy.types.Operator):
         for o in bpy.context.selected_objects:
             if o.type == 'MESH':
 
-                if o.rigid_body.enabled:
-                    if o.rigid_body.type == "PASSIVE":  # Objects with Passive rigidbody become Static colliders
-                        if not o.name.endswith("-col"):
-                            o.name = o.name + "-col"
+                # docs: https://docs.godotengine.org/en/stable/getting_started/workflow/assets/importing_scenes.html
 
-                    elif o.rigid_body.type == "ACTIVE":  # Objects with Active rigidbody become rigidbody colliders
-                        o.name = o.name + "-rigid"
+                know_tags = [
+                    "noimp", # no import
+                    "col", # standard collision (ensure model is simple enough for trimesh) (STATIC)
+                    "convcol", # convex polygon shape, can be faster but not recommended for level geometry (STATIC)
+                    "colonly", # will create a static mesh but will be invisible (good for ramps under stairs etc) (STATIC) (can be used with empties)
+                    "convcolonly", # as above with convex 
+                    "navmesh",  # will remove mesh replace with navigation
+                    "vehicle",
+                    "wheel",
+                    "rigid", # for making them movable crates
+
+                    "loop", # these don't need a hyphen but we use one anyway
+                    "cycle"
+                ]
+
+                for tag in know_tags:
+                    if "<%s>" % tag in o.name:
+                        if not o.name.endswith("-"+tag):
+
+                            o.name = o.name + "-" + tag
+
+
 
         return {'FINISHED'}
 
