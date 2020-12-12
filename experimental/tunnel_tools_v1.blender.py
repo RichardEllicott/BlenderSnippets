@@ -100,6 +100,7 @@ Preferences -> Input -> Addons:  (my choices)
     -Add Curve: Extra Objects
     -Mesh: Loop Tools (you can take squares from sub and make into circle)
 
+    -Interface: Copy Attributes Menu (allows copying single modifier)
 
 
 
@@ -908,7 +909,7 @@ class AUTO_ObjectRemoveTagCol(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class AUTO_ObjectTagColIfRB(bpy.types.Operator):
+class AUTO_ObjectTagExportAppend(bpy.types.Operator):
     """
     
     Uses my custom tagging system that overcomes issues when duplicating objects (with the numbers)
@@ -921,7 +922,7 @@ class AUTO_ObjectTagColIfRB(bpy.types.Operator):
 
 
     """
-    bl_idname = "object.object_tag_col_ifrb"
+    bl_idname = "object.object_tag_export_append"
 
     bl_label = "Append Object Name -col (based on existed <col> tags)"
     bl_options = {'REGISTER', 'UNDO'}
@@ -956,6 +957,24 @@ class AUTO_ObjectTagColIfRB(bpy.types.Operator):
                             o.name = o.name + "-" + tag
 
 
+        return {'FINISHED'}
+
+
+
+class AUTO_ObjectPrepareForGodotExport(bpy.types.Operator):
+    """
+    """
+    bl_idname = "object.prepare_for_godot_export"
+
+    bl_label = "Prepare for Godot export"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        print("running script: AUTO_ObjectPrepareForGodotExport ...")
+
+
+        AUTO_ObjectTagExportAppend.execute(self,context) # run our script
+
 
         return {'FINISHED'}
 
@@ -974,7 +993,7 @@ class AUTO_ObjectCopyUVProjectModifier(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
-        print("running test script a...")
+        print("running script: AUTO_ObjectCopyUVProjectModifier ...")
 
         for ob in bpy.context.selected_objects:
             if ob.type == 'MESH':
@@ -997,23 +1016,11 @@ class AUTO_ObjectTestScriptA(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
-        print("running test script a...")
+        print("running script: AUTO_ObjectTestScriptA ...")
 
         return {'FINISHED'}
 
 
-class AUTO_ObjectTestScriptB(bpy.types.Operator):
-    """
-    """
-    bl_idname = "object.test_script_b"
-
-    bl_label = "Test Script B"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    def execute(self, context):
-        print("running test script b...")
-
-        return {'FINISHED'}
 
 
 def menu_func(self, context):  # not used atm
