@@ -139,10 +139,15 @@ Snap object down to collider blender?
 
 
 
-Moving to 2.9 Notes
+Moving to 2.9 Notes (CURRENTLY BROKEN!!)
 
-maybe the search menu solved by this:
+
+To see the scripts i've added, i need to activate Preferences->Display->DeveloperExtras (as they don't have menu entries)
+
 https://docs.blender.org/manual/en/latest/interface/controls/templates/operator_search.html#bpy-ops-wm-search-operator
+
+
+The keyboard shortcuts have stopped working!
 
 
 
@@ -315,13 +320,9 @@ def origin_to_bottom(ob, matrix=Matrix()):
 def origin_to_corner(corner=0):  # on all selected
     """
 
-    of all selected mesh
+    set all selected objects origin to the chosen "corner", default: left-back-bottom
 
     # https://blender.stackexchange.com/questions/141248/how-to-set-origin-points-of-multiple-objects-to-a-corner-of-their-bounding-boxes
-
-    note this code is only for ALL SELECTED, this is because it doesn't apply the operation to mesh more than once if they're linked
-    (maybe a little ott, so recoding to simple version)
-
 
     0 left back bottom 0,0,0
     1 left back top 0,0,1
@@ -353,6 +354,7 @@ def origin_to_corner(corner=0):  # on all selected
 
 def origin_to_center():
     """
+    for all the selected objects, make their origins go to the center of the bounding box
     """
 
     # SAVES THE SELECTED OBJECTS
@@ -726,7 +728,7 @@ class AUTO_ObjectDoubleGridScale(bpy.types.Operator):
 
     screen_editing_hotkey = {
         # NUMPAD_PLUS RIGHT_BRACKET https://docs.blender.org/api/2.82/bpy.types.KeyMapItem.html#bpy.types.KeyMapItem.type
-        "type": "NUMPAD_PLUS",
+        "type": "RIGHT_BRACKET",
         "value": 'PRESS'
     }
 
@@ -738,7 +740,7 @@ class AUTO_ObjectDoubleGridScale(bpy.types.Operator):
 
     def execute(self, context):
         double_grid_scale()
-        set_default_grid_settings()
+        # set_default_grid_settings() # REMOVED!!! 
         # feedback:
         # https://docs.blender.org/api/blender_python_api_2_75_release/bpy.types.Operator.html?highlight=report#bpy.types.Operator.report
         self.report({"INFO"}, "grid_scale = {}".format(get_grid_scale()))
@@ -755,12 +757,12 @@ class AUTO_ObjectHalfGridScale(bpy.types.Operator):
     # pars listed here: https://docs.blender.org/api/2.82/bpy.types.KeyMapItems.html#bpy.types.KeyMapItems.new
     # https://docs.blender.org/api/2.82/bpy.types.KeyMapItem.html
     screen_editing_hotkey = {
-        "type": "NUMPAD_MINUS",  # NUMPAD_MINUS LEFT_BRACKET
+        "type": "LEFT_BRACKET",  # NUMPAD_MINUS LEFT_BRACKET
         "value": 'PRESS'
     }
 
     def execute(self, context):
-        set_default_grid_settings()
+        # set_default_grid_settings()
         half_grid_scale()
         self.report({"INFO"}, "grid_scale = {}".format(get_grid_scale()))
         return {'FINISHED'}
@@ -1023,6 +1025,29 @@ class AUTO_ObjectTestScriptA(bpy.types.Operator):
 
 
 
+
+
+
+class AUTO_SnapAllSelectedToGrid(bpy.types.Operator):
+    """
+    """
+    bl_idname = "object.snap_all_selected_to_grid"
+
+    bl_label = "Snap All Selected To Grid (cust script)"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        # origin_to_corner()
+
+        bpy.ops.view3d.snap_all_selected_to_grid()
+
+        return {'FINISHED'}
+
+
+
+
+
+
 def menu_func(self, context):  # not used atm
     self.layout.operator(ObjectDoubleGridScale.bl_idname)
 
@@ -1060,6 +1085,8 @@ def register():
         print("******DEBUG CHUNCK********")
         print(dir())
 
+        # kmi.properties.total = 0 # EXPERIMENTAL FOR 2.9 COMPAT
+
         for ob in register_list:
             if hasattr(ob, 'screen_editing_hotkey') and ob.screen_editing_hotkey:  # FIND OUR CUSTOM KEY SETUP DICTS
 
@@ -1068,12 +1095,16 @@ def register():
                 kmi_A = screen_editing_keys.keymap_items.new(**pars_dict)  # ADD THE ACTUAL KEY (BECOMES LIVE HERE)
                 addon_keymaps.append((screen_editing_keys, kmi_A))  # stored for later access (optional)
 
+                # kmi.properties.total += 1 # EXPERIMENTAL FOR 2.9 COMPAT
+
             if hasattr(ob, 'object_mode_hotkey') and ob.object_mode_hotkey:
 
                 pars_dict = {"idname": ob.bl_idname}
                 pars_dict.update(ob.object_mode_hotkey)
                 kmi_A = object_mode_keys.keymap_items.new(**pars_dict)
                 addon_keymaps.append((object_mode_keys, kmi_A))
+
+                # kmi.properties.total += 1 # EXPERIMENTAL FOR 2.9 COMPAT
 
 
 def unregister():
