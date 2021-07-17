@@ -163,6 +163,11 @@ import random
 import math
 from collections import defaultdict
 
+print(sys.version_info)
+# sys.version_info(major=3, minor=4, micro=2, releaselevel='final', serial=0)
+print(sys.version_info.major)
+# 3
+
 
 def print_classes():
     # https://stackoverflow.com/questions/1796180/how-can-i-get-a-list-of-all-classes-within-current-module-in-python
