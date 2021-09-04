@@ -184,7 +184,9 @@ print("loading my_grid_double_shortcut_addon.blender2...")
 # load Blender ICE Library...
 # this is an experimental way of loading a library from an absolute path, it also forces a refresh so you can edit the library
 # then reload this script in blender
+# THIS CODE CAUSED WINDOWS CRASH DEACTIVATED
 
+"""
 libray_path = "/Users/rich/Documents/GitHub/myrepos/BlenderSnippets/experimental"
 
 
@@ -199,7 +201,7 @@ import blender_ice_library as ice
 
 import importlib  # import internals
 importlib.reload(ice)  # force reload of library
-
+"""
 
 # Preferences:
 # TODO https://docs.blender.org/api/blender_python_api_2_68_release/bpy.types.AddonPreferences.html
