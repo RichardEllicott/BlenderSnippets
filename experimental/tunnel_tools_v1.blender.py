@@ -92,8 +92,13 @@ Preferences -> Keymap -> Remap all "View Selected" from "Numpad ." to "."   ----
 Preferences -> Input -> Keyboard -> check "Emulate Numpad" ("Emulate Numpad" now doesn't emulate "Numpad ." for the "." key )
 3D View's "View" side panel > View > Clip (End) to 10'000 
 
+
+View Selected Issue in Blender 2.8, changed to "frame selected"
+3D View -> Frame Selected set to just . (not numpad)
+
+
+
 Preferences -> Input -> Addons:  (my choices)
-    -Import-Export: Import-Export as glTF 2.0
     -Node: Node Wrangler
     -Import-Export: Import Images as Planes
     -Add Mesh: Extra Objects (adds rock generator, regular solids, gears)
