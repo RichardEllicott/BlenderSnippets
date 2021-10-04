@@ -227,6 +227,9 @@ def select_vertices_same_height():
     S 0-> Z -> 0 -> LMB
 
     scale -> Z only -> 0 scale -> LMB to finish
+
+
+    IMPORTANT... this code is obsolete, highlight all vertices, scales them in one axis to 0, this will make them the same height
     """
 
     # just gets selected indexes as dicts of selected objects
@@ -284,7 +287,10 @@ def get_vertex_positions():
 
 
 class AUTO_ObjectVerticesSameHeight(bpy.types.Operator):
-    """Object Double Grid Scale"""
+    """
+    OBSOLETE, use a technique of scaling the vert positions on x y or z to 0
+    """
+
     # bl_idname = "object.double_grid_scale"
     bl_idname = "edit.vertices_same_height"
 
@@ -316,6 +322,8 @@ class AUTO_ObjectVerticesSameHeight(bpy.types.Operator):
 
 def origin_to_bottom(ob, matrix=Matrix()):
     """
+    set the origin of an obhect to it's center at the bottom, like for a chess piece
+
     https://blender.stackexchange.com/questions/42105/set-origin-to-bottom-center-of-multiple-objects?noredirect=1&lq=1
     """
     me = ob.data
@@ -918,7 +926,11 @@ class AUTO_ObjectRemoveTagCol(bpy.types.Operator):
 
         for ob in bpy.context.selected_objects:
             if ob.type == 'MESH':
+
+                ob.name = ob.name.replace("-colonly", "")  # removes any existing "-colonly" sequences in name
+
                 ob.name = ob.name.replace("-col", "")  # removes any existing "-col" sequences in name
+
 
         return {'FINISHED'}
 
@@ -950,8 +962,10 @@ class AUTO_ObjectTagExportAppend(bpy.types.Operator):
                 # docs: https://docs.godotengine.org/en/stable/getting_started/workflow/assets/importing_scenes.html
 
                 know_tags = [
-                    "noimp", # no import
+
                     "col", # standard collision (ensure model is simple enough for trimesh) (STATIC)
+
+                    "noimp", # no import
                     "convcol", # convex polygon shape, can be faster but not recommended for level geometry (STATIC)
                     "colonly", # will create a static mesh but will be invisible (good for ramps under stairs etc) (STATIC) (can be used with empties)
                     "convcolonly", # as above with convex 
@@ -962,6 +976,8 @@ class AUTO_ObjectTagExportAppend(bpy.types.Operator):
 
                     "loop", # these don't need a hyphen but we use one anyway
                     "cycle"
+
+
                 ]
 
                 for tag in know_tags:
