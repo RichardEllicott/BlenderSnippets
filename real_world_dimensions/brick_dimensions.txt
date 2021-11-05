@@ -1,0 +1,23 @@
+
+
+Bricks in the UK measure:
+
+Nowadays most bricks in the UK are made to a standard brick size of 215mm long, 102.5mm wide and 65mm high (215 x 102.5 x 65mm) and laid with a nominal 10mm mortar joint. However, there is a growing trend towards more non-standard brick dimensions, such as Wienerberger's Roman and Megaline bricks.
+
+
+
+Blender dimensions:
+
+0.215 x 0.1025 x 0.065
+
++10mm mortar
+
+0.225            0.075
+
+
+0.075   you get 13.3333 in a 1 m height
+
+we could adjust the height to 0.07692307692307693 to get 13
+
+0.07692307692307693 - 0.075  = 0.0019230769230769301 fudging distance (less than 2mm extra mortar)
+
