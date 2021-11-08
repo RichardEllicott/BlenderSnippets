@@ -8,6 +8,7 @@ Nowadays most bricks in the UK are made to a standard brick size of 215mm long, 
 
 Blender dimensions:
 
+long  x wide   x high
 0.215 x 0.1025 x 0.065
 
 +10mm mortar
@@ -20,4 +21,82 @@ Blender dimensions:
 we could adjust the height to 0.07692307692307693 to get 13
 
 0.07692307692307693 - 0.075  = 0.0019230769230769301 fudging distance (less than 2mm extra mortar)
+
+
+
+0.215 long + 10 mm mortar = 0.225
+x 4.5 bricks (note intelace) = 1.0125
+
+1/4.5 = 0.2222222222222222
+
+0.2222222222222222 - 0.215   = 0.007222222222222213 so we have reduced mortar to about 7 mm
+
+
+
+
+Full Fudge Dist solution:
+
+bricks are:
+0.215 x 0.1025 x 0.065
+
+
+length / height = 3.3076923076923075 ratio
+
++fudge is
+
+
+long=0.215
+wide=0.1025
+high=0.065
+
+
+height fudged to 1/13 is 0.07692307692307693
+that is mortar height 0.011923076923076925
+
+
+length fudged to have 1/4.5 (4 and a half brick a meter) = 0.2222222222222222
+that is 0.007222222222222213 mortar
+
+
+one way to create this pattern, take a plane, subdivide it into 
+
+
+
+Major Approx Bricks:
+
+1/4 length   1/12 height    
+
+0.25   (0.125?)   0.08333333333333333  = 3 ratio  
+
+length / height = 
+
+
+sub 2 the 5 height
+
+sub 7 width
+
+
+Approx Brick is:
+
+0.25 x 0.125 x 0.083333
+
+this makes 1m with 12 stacked, 4 end to end also a meter
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

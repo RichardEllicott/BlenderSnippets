@@ -21,3 +21,13 @@ one stair unit now 5,2,3
 
 
 
+my current preffered stair dimensions are
+
+5 stairs per a meter, 20cm rise
+for depth, 1.5 x the height (30cm)
+
+
+
+
+
+
