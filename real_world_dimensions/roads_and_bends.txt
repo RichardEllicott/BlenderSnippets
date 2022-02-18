@@ -1,0 +1,12 @@
+
+
+Average sizes:
+
+roads can be 4 m wide per a lane, this is fairly wide like a highway, a Lane could be 3 m
+
+a crash barrier can be 0.5m this is slightly tall
+
+
+
+pi = 3.14159265359
+
