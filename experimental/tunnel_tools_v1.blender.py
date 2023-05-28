@@ -90,7 +90,7 @@ Notes about my keymap i normally use
 Preferences -> Keymap -> Blender27X profile
 Preferences -> Keymap -> Remap all "View Selected" from "Numpad ." to "."   ----- Now "Frame Selected" to "." (not "Numpad .")
 Preferences -> Input -> Keyboard -> check "Emulate Numpad" ("Emulate Numpad" now doesn't emulate "Numpad ." for the "." key )
-3D View's "View" side panel > View > Clip (End) to 10'000 
+3D View's "View" side panel > View > Clip (End) to 10'000
 
 
 View Selected Issue in Blender 2.8, changed to "frame selected"
@@ -110,7 +110,7 @@ Preferences -> Input -> Addons:  (my choices)
 
 
     -Object: Bool Tool
-    
+
     -Node: Node Presets??? (allows to set a folder of node presets) (DID NOT WORK REPLACED WITH VX)
     -Material: Material Library (solves material issue)
 
@@ -130,8 +130,8 @@ TODO ADDON:
 Football Pitch:
 
 middle to top of goal line
-105.0/2.0 - 16.5 pos 
-68.0/2.0 - 
+105.0/2.0 - 16.5 pos
+68.0/2.0 -
 
 
 
@@ -167,6 +167,7 @@ from mathutils import Matrix, Vector, Euler
 import random
 import math
 from collections import defaultdict
+import random
 
 print(sys.version_info)
 # sys.version_info(major=3, minor=4, micro=2, releaselevel='final', serial=0)
@@ -522,6 +523,7 @@ def remove_scene_objects(key=None):
 
 def select_all(): bpy.ops.object.select_all(action='SELECT')
 
+
 def deselect_all(): bpy.ops.object.select_all(action='DESELECT')
 
 
@@ -564,7 +566,7 @@ def point_cloud(ob_name, coords, edges=[], faces=[]):
     ob_name -- new object name
     coords -- float triplets eg: [(-1.0, 1.0, 0.0), (-1.0, -1.0, 0.0)]
 
-    #https://blender.stackexchange.com/questions/23086/add-a-simple-vertex-via-python
+    # https://blender.stackexchange.com/questions/23086/add-a-simple-vertex-via-python
 
     """
 
@@ -667,12 +669,9 @@ def my_tree_generator():
 
     node_list = [{'id': 0, 'depth': 1, 'direction': Vector((0.0, 0.0, 1.0))}]
 
-
-    noise = 1.0/2.0
-
+    noise = 1.0 / 2.0
 
     max_branch_size = 6
-
 
     extrude_length = 16.0
 
@@ -683,13 +682,11 @@ def my_tree_generator():
         depth = data['depth']
         direction = data['direction']
 
-        
         direction = Vector(
             (direction.x + (random.uniform(-1.0, 1.0) * noise),
                 direction.y + (random.uniform(-1.0, 1.0) * noise),
                 direction.z + (random.uniform(-1.0, 1.0) * noise)))
-        direction.normalize() # normalize the vector
-
+        direction.normalize()  # normalize the vector
 
         # ALL VERTS GET THE RADIUS SET
         select_vert(vert)
@@ -760,7 +757,7 @@ class AUTO_ObjectDoubleGridScale(bpy.types.Operator):
 
     def execute(self, context):
         double_grid_scale()
-        # set_default_grid_settings() # REMOVED!!! 
+        # set_default_grid_settings() # REMOVED!!!
         # feedback:
         # https://docs.blender.org/api/blender_python_api_2_75_release/bpy.types.Operator.html?highlight=report#bpy.types.Operator.report
         self.report({"INFO"}, "grid_scale = {}".format(get_grid_scale()))
@@ -883,75 +880,242 @@ class AUTO_ObjectOriginToCenter(bpy.types.Operator):
         return {'FINISHED'}
 
 
-class AUTO_ObjectTagCol(bpy.types.Operator):
+# class AUTO_ObjectTagCol(bpy.types.Operator):
+#     """
+#     ensure all selected objects end with the -col tag, allowing Godot to generate a static collider
+
+#     ignore any objects that have the tag "<nocol>" in name
+
+
+#     https://docs.godotengine.org/en/stable/getting_started/workflow/assets/importing_scenes.html?highlight=importing%20assets#godot-scene-importer
+
+
+#     """
+#     bl_idname = "object.object_tag_col"
+
+#     bl_label = "Append Object Name -col"
+#     bl_options = {'REGISTER', 'UNDO'}
+
+#     def execute(self, context):
+#         for ob in bpy.context.selected_objects:
+#             if ob.type == 'MESH':  # only apply to mesh objects
+#                 if not ob.name.endswith("-col"):  # if already tagged, just ignore
+
+#                     ob.name = ob.name.replace("-col", "")  # clean out any other -col tags, sometimes causing issues
+
+#                     if not "<nocol>" in ob.name:  # special ignore tag (nocol)
+#                         ob.name = ob.name + "-col"  # -col appended to end so Godot will find it
+
+#         return {'FINISHED'}
+
+
+# class AUTO_ObjectRemoveTagCol(bpy.types.Operator):
+#     """
+#     opposite function designed to clear away the -col tags
+
+#     """
+#     bl_idname = "object.object_remove_tag_col"
+
+#     bl_label = "Remove Object Name -col"
+#     bl_options = {'REGISTER', 'UNDO'}
+
+#     def execute(self, context):
+
+#         for ob in bpy.context.selected_objects:
+#             if ob.type == 'MESH':
+
+#                 ob.name = ob.name.replace("-colonly", "")  # removes any existing "-colonly" sequences in name
+
+#                 ob.name = ob.name.replace("-col", "")  # removes any existing "-col" sequences in name
+
+#         return {'FINISHED'}
+
+
+# class AUTO_ObjectTagExportAppend(bpy.types.Operator):
+#     """
+
+#     Uses my custom tagging system that overcomes issues when duplicating objects (with the numbers)
+
+
+#     While working in blender I leave tags like <col> etc in the names
+
+#     This script would convert "Cube<col>.004" => "Cube<col>.004-col"
+
+
+#     """
+#     bl_idname = "object.object_tag_export_append"
+
+#     bl_label = "Append Object Name -col (based on existed <col> tags)"
+#     bl_options = {'REGISTER', 'UNDO'}
+
+#     def execute(self, context):
+#         # origin_to_corner()
+
+#         for o in bpy.context.selected_objects:
+#             if o.type == 'MESH':
+
+#                 # docs: https://docs.godotengine.org/en/stable/getting_started/workflow/assets/importing_scenes.html
+
+#                 know_tags = [
+
+#                     "col",  # standard collision (ensure model is simple enough for trimesh) (STATIC)
+
+#                     "noimp",  # no import
+#                     "convcol",  # convex polygon shape, can be faster but not recommended for level geometry (STATIC)
+#                     "colonly",  # will create a static mesh but will be invisible (good for ramps under stairs etc) (STATIC) (can be used with empties)
+#                     "convcolonly",  # as above with convex
+#                     "navmesh",  # will remove mesh replace with navigation
+#                     "vehicle",
+#                     "wheel",
+#                     "rigid",  # for making them movable crates
+
+#                     "loop",  # these don't need a hyphen but we use one anyway
+#                     "cycle"
+
+
+#                 ]
+
+#                 for tag in know_tags:
+#                     if "<%s>" % tag in o.name:
+#                         if not o.name.endswith("-" + tag):
+
+#                             o.name = o.name + "-" + tag
+
+#         return {'FINISHED'}
+
+
+class AUTO_ObjectGodotExportTidy(bpy.types.Operator):
     """
-    ensure all selected objects end with the -col tag, allowing Godot to generate a static collider
 
-    ignore any objects that have the tag "<nocol>" in name
+    Godot Export Tidy
+
+    go through all selected objects and check for tags like -col -rigid etc
+    ensure they are at the back and not in the middle of the string:
+
+    "Bear-col.002" => "Bear.002-col"
+
+    also removes my old tags:
+
+    "Bear<col>.005" => "Bear.005-col"
 
 
-    https://docs.godotengine.org/en/stable/getting_started/workflow/assets/importing_scenes.html?highlight=importing%20assets#godot-scene-importer
+
+    is not always perfect as can sometimes find the object gets renamed
 
 
     """
-    bl_idname = "object.object_tag_col"
+    bl_idname = "object.object_tag_export_sort"
 
-    bl_label = "Append Object Name -col"
+    bl_label = "Godot: sort out all godot export tags (-col etc to back)"
     bl_options = {'REGISTER', 'UNDO'}
 
-    def execute(self, context):
-        for ob in bpy.context.selected_objects:
-            if ob.type == 'MESH':  # only apply to mesh objects
-                if not ob.name.endswith("-col"):  # if already tagged, just ignore
+    know_tags = [
 
-                    ob.name = ob.name.replace("-col", "")  # clean out any other -col tags, sometimes causing issues
+        
 
-                    if not "<nocol>" in ob.name:  # special ignore tag (nocol)
-                        ob.name = ob.name + "-col"  # -col appended to end so Godot will find it
+        "noimp",  # no import
+        
+        "colonly",  # static trimesh, deletes the mesh leaves collider (can be used with empties)
 
-        return {'FINISHED'}
+        "col",  # static collision (ensure model is simple enough for trimesh), check AFTER colonly
+        
 
-
-class AUTO_ObjectRemoveTagCol(bpy.types.Operator):
-    """
-    opposite function designed to clear away the -col tags
-
-    """
-    bl_idname = "object.object_remove_tag_col"
-
-    bl_label = "Remove Object Name -col"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    def execute(self, context):
-
-        for ob in bpy.context.selected_objects:
-            if ob.type == 'MESH':
-
-                ob.name = ob.name.replace("-colonly", "")  # removes any existing "-colonly" sequences in name
-
-                ob.name = ob.name.replace("-col", "")  # removes any existing "-col" sequences in name
+        "convcolonly",  # convex static collider, then delete this mesh
+        "convcol",  # convex static collider, can be faster but geometry must be convex
 
 
-        return {'FINISHED'}
+        "navmesh",  # will remove mesh replace with navigation
+        "vehicle",
+        "wheel",
+        "rigid",  # for making them movable crates
 
+        "loop",  # these don't need a hyphen but we use one anyway
+        "cycle"
 
-class AUTO_ObjectTagExportAppend(bpy.types.Operator):
-    """
-    
-    Uses my custom tagging system that overcomes issues when duplicating objects (with the numbers)
+        
 
+    ]
 
-    While working in blender I leave tags like <col> etc in the names
+    # attempt to make function that will only rename if no conflict, return true or false
 
-    This script would convert "Cube<col>.004" => "Cube<col>.004-col"
+    def rename_object(self, o, new_name):
 
+        orginal_name = o.name
+        o.name = new_name
 
+        if o.name == new_name:
+            return True
+        else:
+            o.name = orginal_name
+            return False
 
-    """
-    bl_idname = "object.object_tag_export_append"
+    # attempt to remove the .345.001.231 numbers that build up, works to reduce to just two at max
 
-    bl_label = "Append Object Name -col (based on existed <col> tags)"
-    bl_options = {'REGISTER', 'UNDO'}
+    def tidy_object_number(self, o):
+
+        print("tidy name, ", o.name)
+
+        orginal_name = o.name
+
+        split = o.name.split('.')
+        # if len(split) > 2:
+        # o.name = split[0]
+
+        digit_block_count = 0
+
+        rebuild = []
+
+        digit_blocks = []
+
+        for block in split:
+            if len(block) == 3 and block.isdigit():
+                digit_block_count += 1
+
+                digit_blocks.append(block)
+
+            else:
+                rebuild.append(block)  # only keep non digit block
+
+        if digit_block_count > 1:
+
+            # method 1
+            # o.name = ".".join(rebuild) + "." + digit_blocks[-1] # try to keep old number
+
+            # method 2 .... this method seems best, it always settles on two .726.273-col etc
+            ran_string = "{}{}{}".format(str(random.randint(0, 9)), str(random.randint(0, 9)), str(random.randint(0, 9)))
+
+            # ran_string += "."
+            # for i in range(3):
+            # ran_string += str(random.randint(0,9))
+
+            o.name = ".".join(rebuild) + "." + ran_string
+
+    def tidy_object_name(self, o):
+
+        #self.tidy_object_number(o)
+
+        for tag in self.know_tags:
+            check_string = "-%s" % tag  # check for tag like -col
+
+            tag_string = "<%s>" % tag
+
+            if check_string in o.name:  # if tag in name
+                if not o.name.endswith(check_string):  # tag not already at end
+
+                    o.name = o.name.replace(check_string, "") + check_string  # new name remove he old name, add tag to end
+                    break
+                    # note at this point blender could end up renaming due to duplicates, add .001 after our tag!
+
+                elif tag_string in name:  # replaces the old tags
+                    o.name = o.name.replace(tag_string, "") + check_string
+                    break
+
+                # split = o.name.split('.')
+                # if len(split) > 2:
+
+                #     pass
+
+                break
 
     def execute(self, context):
         # origin_to_corner()
@@ -961,59 +1125,46 @@ class AUTO_ObjectTagExportAppend(bpy.types.Operator):
 
                 # docs: https://docs.godotengine.org/en/stable/getting_started/workflow/assets/importing_scenes.html
 
-                know_tags = [
+                self.tidy_object_name(o)
 
-                    "col", # standard collision (ensure model is simple enough for trimesh) (STATIC)
+                # for tag in self.know_tags:
+                #     check_string = "-%s" % tag  # check for tag like -col
 
-                    "noimp", # no import
-                    "convcol", # convex polygon shape, can be faster but not recommended for level geometry (STATIC)
-                    "colonly", # will create a static mesh but will be invisible (good for ramps under stairs etc) (STATIC) (can be used with empties)
-                    "convcolonly", # as above with convex 
-                    "navmesh",  # will remove mesh replace with navigation
-                    "vehicle",
-                    "wheel",
-                    "rigid", # for making them movable crates
+                #     tag_string = "<%s>" % tag
 
-                    "loop", # these don't need a hyphen but we use one anyway
-                    "cycle"
+                #     if check_string in o.name:  # if tag in name
+                #         if not o.name.endswith(check_string):  # tag not already at end
+                #             o.name = o.name.replace(check_string, "") + check_string  # new name remove he old name, add tag to end
 
-
-                ]
-
-                for tag in know_tags:
-                    if "<%s>" % tag in o.name:
-                        if not o.name.endswith("-"+tag):
-
-                            o.name = o.name + "-" + tag
-
+                #             # note at this point blender could end up renaming due to duplicates, add .001 after our tag!
 
         return {'FINISHED'}
 
 
+# class AUTO_ObjectPrepareForGodotExport(bpy.types.Operator):
+#     """
+#     """
+#     bl_idname = "object.prepare_for_godot_export"
 
-class AUTO_ObjectPrepareForGodotExport(bpy.types.Operator):
-    """
-    """
-    bl_idname = "object.prepare_for_godot_export"
+#     bl_label = "Prepare for Godot export"
+#     bl_options = {'REGISTER', 'UNDO'}
 
-    bl_label = "Prepare for Godot export"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    def execute(self, context):
-        print("running script: AUTO_ObjectPrepareForGodotExport ...")
-
-
-        AUTO_ObjectTagExportAppend.execute(self,context) # run our script
+#     def execute(self, context):
+#         print("running script: AUTO_ObjectPrepareForGodotExport ...")
 
 
-        return {'FINISHED'}
+#         AUTO_ObjectTagExportAppend.execute(self,context) # run our script
+
+
+#         return {'FINISHED'}
 
 
 class AUTO_ObjectCopyUVProjectModifier(bpy.types.Operator):
     """
     testing adding modifiers etc
 
-    ['DATA_TRANSFER', 'MESH_CACHE', 'MESH_SEQUENCE_CACHE', 'NORMAL_EDIT', 'WEIGHTED_NORMAL', 'UV_PROJECT', 'UV_WARP', 'VERTEX_WEIGHT_EDIT', 'VERTEX_WEIGHT_MIX', 'VERTEX_WEIGHT_PROXIMITY', 'ARRAY', 'BEVEL', 'BOOLEAN', 'BUILD', 'DECIMATE', 'EDGE_SPLIT', 'MASK', 'MIRROR', 'MULTIRES', 'REMESH', 'SCREW', 'SKIN', 'SOLIDIFY', 'SUBSURF', 'TRIANGULATE', 'WIREFRAME', 'WELD', 'ARMATURE', 'CAST', 'CURVE', 'DISPLACE', 'HOOK', 'LAPLACIANDEFORM', 'LATTICE', 'MESH_DEFORM', 'SHRINKWRAP', 'SIMPLE_DEFORM', 'SMOOTH', 'CORRECTIVE_SMOOTH', 'LAPLACIANSMOOTH', 'SURFACE_DEFORM', 'WARP', 'WAVE', 'CLOTH', 'COLLISION', 'DYNAMIC_PAINT', 'EXPLODE', 'OCEAN', 'PARTICLE_INSTANCE', 'PARTICLE_SYSTEM', 'FLUID', 'SOFT_BODY', 'SURFACE']
+    ['DATA_TRANSFER', 'MESH_CACHE', 'MESH_SEQUENCE_CACHE', 'NORMAL_EDIT', 'WEIGHTED_NORMAL', 'UV_PROJECT', 'UV_WARP', 'VERTEX_WEIGHT_EDIT', 'VERTEX_WEIGHT_MIX', 'VERTEX_WEIGHT_PROXIMITY', 'ARRAY', 'BEVEL', 'BOOLEAN', 'BUILD', 'DECIMATE', 'EDGE_SPLIT', 'MASK', 'MIRROR', 'MULTIRES', 'REMESH', 'SCREW', 'SKIN', 'SOLIDIFY', 'SUBSURF', 'TRIANGULATE', 'WIREFRAME',
+        'WELD', 'ARMATURE', 'CAST', 'CURVE', 'DISPLACE', 'HOOK', 'LAPLACIANDEFORM', 'LATTICE', 'MESH_DEFORM', 'SHRINKWRAP', 'SIMPLE_DEFORM', 'SMOOTH', 'CORRECTIVE_SMOOTH', 'LAPLACIANSMOOTH', 'SURFACE_DEFORM', 'WARP', 'WAVE', 'CLOTH', 'COLLISION', 'DYNAMIC_PAINT', 'EXPLODE', 'OCEAN', 'PARTICLE_INSTANCE', 'PARTICLE_SYSTEM', 'FLUID', 'SOFT_BODY', 'SURFACE']
 
 
     """
@@ -1036,7 +1187,8 @@ class AUTO_ObjectTestScriptA(bpy.types.Operator):
     """
     testing adding modifiers etc
 
-    ['DATA_TRANSFER', 'MESH_CACHE', 'MESH_SEQUENCE_CACHE', 'NORMAL_EDIT', 'WEIGHTED_NORMAL', 'UV_PROJECT', 'UV_WARP', 'VERTEX_WEIGHT_EDIT', 'VERTEX_WEIGHT_MIX', 'VERTEX_WEIGHT_PROXIMITY', 'ARRAY', 'BEVEL', 'BOOLEAN', 'BUILD', 'DECIMATE', 'EDGE_SPLIT', 'MASK', 'MIRROR', 'MULTIRES', 'REMESH', 'SCREW', 'SKIN', 'SOLIDIFY', 'SUBSURF', 'TRIANGULATE', 'WIREFRAME', 'WELD', 'ARMATURE', 'CAST', 'CURVE', 'DISPLACE', 'HOOK', 'LAPLACIANDEFORM', 'LATTICE', 'MESH_DEFORM', 'SHRINKWRAP', 'SIMPLE_DEFORM', 'SMOOTH', 'CORRECTIVE_SMOOTH', 'LAPLACIANSMOOTH', 'SURFACE_DEFORM', 'WARP', 'WAVE', 'CLOTH', 'COLLISION', 'DYNAMIC_PAINT', 'EXPLODE', 'OCEAN', 'PARTICLE_INSTANCE', 'PARTICLE_SYSTEM', 'FLUID', 'SOFT_BODY', 'SURFACE']
+    ['DATA_TRANSFER', 'MESH_CACHE', 'MESH_SEQUENCE_CACHE', 'NORMAL_EDIT', 'WEIGHTED_NORMAL', 'UV_PROJECT', 'UV_WARP', 'VERTEX_WEIGHT_EDIT', 'VERTEX_WEIGHT_MIX', 'VERTEX_WEIGHT_PROXIMITY', 'ARRAY', 'BEVEL', 'BOOLEAN', 'BUILD', 'DECIMATE', 'EDGE_SPLIT', 'MASK', 'MIRROR', 'MULTIRES', 'REMESH', 'SCREW', 'SKIN', 'SOLIDIFY', 'SUBSURF', 'TRIANGULATE', 'WIREFRAME',
+        'WELD', 'ARMATURE', 'CAST', 'CURVE', 'DISPLACE', 'HOOK', 'LAPLACIANDEFORM', 'LATTICE', 'MESH_DEFORM', 'SHRINKWRAP', 'SIMPLE_DEFORM', 'SMOOTH', 'CORRECTIVE_SMOOTH', 'LAPLACIANSMOOTH', 'SURFACE_DEFORM', 'WARP', 'WAVE', 'CLOTH', 'COLLISION', 'DYNAMIC_PAINT', 'EXPLODE', 'OCEAN', 'PARTICLE_INSTANCE', 'PARTICLE_SYSTEM', 'FLUID', 'SOFT_BODY', 'SURFACE']
 
 
     """
@@ -1049,11 +1201,6 @@ class AUTO_ObjectTestScriptA(bpy.types.Operator):
         print("running script: AUTO_ObjectTestScriptA ...")
 
         return {'FINISHED'}
-
-
-
-
-
 
 
 class AUTO_SnapAllSelectedToGrid(bpy.types.Operator):
@@ -1070,10 +1217,6 @@ class AUTO_SnapAllSelectedToGrid(bpy.types.Operator):
         bpy.ops.view3d.snap_all_selected_to_grid()
 
         return {'FINISHED'}
-
-
-
-
 
 
 def menu_func(self, context):  # not used atm
