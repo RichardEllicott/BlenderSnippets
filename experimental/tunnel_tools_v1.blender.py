@@ -1068,7 +1068,10 @@ class AUTO_ObjectGodotExportTidy(bpy.types.Operator):
         digit_blocks = []
 
         for block in split:
+
+            #print("test block:", block)
             if len(block) == 3 and block.isdigit():
+                #print("GAMESS")
                 digit_block_count += 1
 
                 digit_blocks.append(block)
@@ -1076,23 +1079,36 @@ class AUTO_ObjectGodotExportTidy(bpy.types.Operator):
             else:
                 rebuild.append(block)  # only keep non digit block
 
+
+
+        ## NEW
+        # ran_string = "{}{}{}".format(str(random.randint(0, 9)), str(random.randint(0, 9)), str(random.randint(0, 9)))
+        # o.name = ".".join(rebuild) + "." + ran_string
+        ## /NEW
+
+        print(rebuild)
+
+
         if digit_block_count > 1:
-
-            # method 1
-            # o.name = ".".join(rebuild) + "." + digit_blocks[-1] # try to keep old number
-
-            # method 2 .... this method seems best, it always settles on two .726.273-col etc
             ran_string = "{}{}{}".format(str(random.randint(0, 9)), str(random.randint(0, 9)), str(random.randint(0, 9)))
-
-            # ran_string += "."
-            # for i in range(3):
-            # ran_string += str(random.randint(0,9))
-
             o.name = ".".join(rebuild) + "." + ran_string
+
+
+        #     # method 1
+        #     # o.name = ".".join(rebuild) + "." + digit_blocks[-1] # try to keep old number
+
+        #     # method 2 .... this method seems best, it always settles on two .726.273-col etc
+        #     ran_string = "{}{}{}".format(str(random.randint(0, 9)), str(random.randint(0, 9)), str(random.randint(0, 9)))
+
+        #     # ran_string += "."
+        #     # for i in range(3):
+        #     # ran_string += str(random.randint(0,9))
+
+        #     o.name = ".".join(rebuild) + "." + ran_string
 
     def tidy_object_name(self, o):
 
-        #self.tidy_object_number(o)
+        self.tidy_object_number(o)
 
         for tag in self.know_tags:
             check_string = "-%s" % tag  # check for tag like -col
