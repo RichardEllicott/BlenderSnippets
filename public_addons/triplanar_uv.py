@@ -22,6 +22,9 @@
 # 
 # line 56 commented out, this seems to make the addon 2.8 compatible
 
+
+# this mapping is similar to triplar but i think better, like a "cube projection"... however i have a geo node instead now
+
 bl_info = {
     "name": "Triplanar UV mapping",
     "category": "UV",
